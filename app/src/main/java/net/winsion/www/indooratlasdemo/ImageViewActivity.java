@@ -1,5 +1,6 @@
 package net.winsion.www.indooratlasdemo;
 
+import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -12,7 +13,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.widget.TextView;
@@ -40,9 +43,10 @@ import java.io.File;
 public class ImageViewActivity extends FragmentActivity {
 
     private static final String TAG = "IndoorAtlasExample";
+    private static final int EMPTY_MSG = 10000;
 
     // blue dot radius in meters
-    private static final float dotRadius = 0.4f;
+    private static final float dotRadius = 0.25f;
 
     private IALocationManager mIALocationManager;
     private IAResourceManager mFloorPlanManager;
@@ -55,20 +59,23 @@ public class ImageViewActivity extends FragmentActivity {
     private ProgressDialog mProgressDialog;
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
+        @SuppressLint("SetTextI18n")
         @Override
         public void onLocationChanged(IALocation location) {
-            Log.d(TAG, "location is: " + location.getLatitude() + "," + location.getLongitude());
             mTextView.setText("latitude纬度:" + location.getLatitude() + '\n'
                     + "longitude经度:" + location.getLongitude() + '\n'
                     + "Accuracy精度" + location.getAccuracy() + '\n'
                     + "Altitude海拔" + location.getAltitude() + '\n'
-                    + "Bearing导向" + location.getBearing() + '\n');
+                    + "Bearing方位" + location.getBearing() + '\n'); //Returns bearing in degrees, in range of (0.0, 360.0].
             if (mImageView != null && mImageView.isReady()) {
                 IALatLng latLng = new IALatLng(location.getLatitude(), location.getLongitude());
                 PointF point = mFloorPlan.coordinateToPoint(latLng);
                 Logger.i(mFloorPlan.toString());
                 mImageView.setDotCenter(point);
                 mImageView.postInvalidate();
+                if (mProgressDialog.isShowing()){
+                    mHandler.sendEmptyMessage(EMPTY_MSG);
+                }
             }
         }
     };
@@ -92,6 +99,14 @@ public class ImageViewActivity extends FragmentActivity {
 
     };
 
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            mProgressDialog.dismiss();
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,6 +119,7 @@ public class ImageViewActivity extends FragmentActivity {
 
         mProgressDialog = new ProgressDialog(ImageViewActivity.this);
         mProgressDialog.show();
+        mProgressDialog.setMessage("初始化地图数据...");
 
         mDownloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         mIALocationManager = IALocationManager.create(this);
@@ -189,7 +205,7 @@ public class ImageViewActivity extends FragmentActivity {
         Log.w(TAG, "showFloorPlanImage: " + filePath + "; MetersTopixels=" + mFloorPlan.getMetersToPixels());
         mImageView.setRadius(mFloorPlan.getMetersToPixels() * dotRadius);
         mImageView.setImage(ImageSource.uri(filePath));
-        mProgressDialog.dismiss();
+        mProgressDialog.setMessage("请移动方位以完成初始化操作");
     }
 
     /**

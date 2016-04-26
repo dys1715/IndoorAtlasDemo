@@ -56,8 +56,11 @@ public class BlueDotView extends SubsamplingScaleImageView {
             Paint paint = new Paint();
             paint.setAntiAlias(true);
             paint.setStyle(Paint.Style.FILL);
+//            paint.setColor(getResources().getColor(R.color.ia_blue_tint));
+//            canvas.drawCircle(vPoint.x, vPoint.y, scaledRadius * 10, paint);
             paint.setColor(getResources().getColor(R.color.ia_blue));
             canvas.drawCircle(vPoint.x, vPoint.y, scaledRadius, paint);
+
         }
     }
 }

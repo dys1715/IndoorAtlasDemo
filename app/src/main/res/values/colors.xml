@@ -4,4 +4,5 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="ia_blue">#ff00a5f5</color>
+    <color name="ia_blue_tint">#3809c5f1</color>
 </resources>
