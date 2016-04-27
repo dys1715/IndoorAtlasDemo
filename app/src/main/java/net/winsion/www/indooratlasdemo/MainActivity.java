@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.indooratlas.android.sdk.IALocation;
@@ -26,12 +27,20 @@ import net.winsion.www.indooratlasdemo.imageview.BlueDotView;
 
 public class MainActivity extends AppCompatActivity {
 
+    private TextView mTextView;
     private IALocationManager mIALocationManager;
 
     private IALocationListener mIaLocationListener = new IALocationListener() {
         @Override
         public void onLocationChanged(IALocation iaLocation) {
-            Logger.d("纬度=" + iaLocation.getLatitude() + ";经度=" + iaLocation.getLongitude());
+//            Logger.d("纬度=" + iaLocation.getLatitude() + ";经度=" + iaLocation.getLongitude());
+            mTextView.append("latitude纬度:" + iaLocation.getLatitude() + '\n'
+                    + "longitude经度:" + iaLocation.getLongitude() + '\n'
+                    + "Accuracy精度:" + iaLocation.getAccuracy() + '\n'
+                    + "Altitude高度:" + iaLocation.getAltitude() + '\n'
+                    + "FloorLevel:" + iaLocation.getFloorLevel() + '\n'
+                    + "Bearing方位:" + iaLocation.getBearing() + '\n' //Returns bearing in degrees, in range of (0.0, 360.0].
+                    + "Region:" + iaLocation.getRegion().toString() + '\n');
         }
 
         @Override
@@ -43,8 +52,10 @@ public class MainActivity extends AppCompatActivity {
     private IARegion.Listener mRegionListener = new IARegion.Listener() {
         @Override
         public void onEnterRegion(IARegion iaRegion) {
-
+            Logger.init("floorPlanId");
+            Logger.i(iaRegion.getId());
         }
+
         @Override
         public void onExitRegion(IARegion iaRegion) {
 
@@ -55,14 +66,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        findViewById(R.id.text1).setOnClickListener(new View.OnClickListener() {
+        mTextView = (TextView) findViewById(R.id.text1);
+        mTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this,ImageViewActivity.class));
+                startActivity(new Intent(MainActivity.this, ImageViewActivity.class));
             }
         });
 
         mIALocationManager = IALocationManager.create(this);
+
 
     }
 

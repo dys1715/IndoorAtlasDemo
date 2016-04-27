@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -64,19 +65,30 @@ public class ImageViewActivity extends FragmentActivity {
         public void onLocationChanged(IALocation location) {
             mTextView.setText("latitude纬度:" + location.getLatitude() + '\n'
                     + "longitude经度:" + location.getLongitude() + '\n'
-                    + "Accuracy精度" + location.getAccuracy() + '\n'
-                    + "Altitude海拔" + location.getAltitude() + '\n'
-                    + "Bearing方位" + location.getBearing() + '\n'); //Returns bearing in degrees, in range of (0.0, 360.0].
+                    + "Accuracy精度:" + location.getAccuracy() + '\n'
+                    + "Altitude高度:" + location.getAltitude() + '\n'
+                    + "FloorLevel:" + location.getFloorLevel() + '\n'
+                    + "Bearing方位:" + location.getBearing() + '\n'
+                    + "Region:" + location.getRegion().toString()); //Returns bearing in degrees, in range of (0.0, 360.0].
             if (mImageView != null && mImageView.isReady()) {
                 IALatLng latLng = new IALatLng(location.getLatitude(), location.getLongitude());
                 PointF point = mFloorPlan.coordinateToPoint(latLng);
                 Logger.i(mFloorPlan.toString());
+                mTextView.append("pointX:" + point.x + '\n'
+                        + "pointY:" + point.y + '\n'
+                        + "bitmapWidth:" + mFloorPlan.getBitmapWidth() + '\n'
+                        + "bitmapHeight:" + mFloorPlan.getBitmapHeight());
                 mImageView.setDotCenter(point);
                 mImageView.postInvalidate();
-                if (mProgressDialog.isShowing()){
+                if (mProgressDialog.isShowing()) {
                     mHandler.sendEmptyMessage(EMPTY_MSG);
                 }
             }
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            super.onStatusChanged(provider, status, extras);
         }
     };
 
@@ -84,12 +96,15 @@ public class ImageViewActivity extends FragmentActivity {
 
         @Override
         public void onEnterRegion(IARegion region) {
+            Logger.i(region.toString());
+            //获取配置的floorId
             if (region.getType() == IARegion.TYPE_FLOOR_PLAN) {
                 String id = region.getId();
-                Log.d(TAG, "floorPlan changed to " + id);
+                Log.i(TAG, "floorPlan changed to " + id);
                 Toast.makeText(ImageViewActivity.this, id, Toast.LENGTH_SHORT).show();
                 fetchFloorPlan(id);
             }
+
         }
 
         @Override
@@ -99,7 +114,7 @@ public class ImageViewActivity extends FragmentActivity {
 
     };
 
-    private Handler mHandler = new Handler(){
+    private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
@@ -130,25 +145,19 @@ public class ImageViewActivity extends FragmentActivity {
                 .withAccuracy(0.1f)
                 .withAltitude(1000)
                 .build();
-
-
+        
         /* optional setup of floor plan id
            if setLocation is not called, then location manager tries to find
            location automatically */
-//        final String floorPlanId = getString(R.string.indooratlas_floor_plan_id);
-//        if (!TextUtils.isEmpty(floorPlanId)) {
-//            final IALocation location = IALocation.from(IARegion.floorPlan(floorPlanId));
-//            mIALocationManager.setLocation(location);
-//        }
+//        setLocation(getString(R.string.indooratlas_floor_plan_id));
 
-        IALocation location1 = IALocation.from(IARegion.floorPlan("c48ea9b3-47cc-41ea-8235-e8a3807f83c8"));
-        mIALocationManager.setLocation(location1);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mIALocationManager.destroy();
+    private void setLocation(String floorPlanId) {
+        if (!TextUtils.isEmpty(floorPlanId)) {
+            final IALocation location = IALocation.from(IARegion.floorPlan(floorPlanId));
+            mIALocationManager.setLocation(location);
+        }
     }
 
     @Override
@@ -166,6 +175,12 @@ public class ImageViewActivity extends FragmentActivity {
         mIALocationManager.removeLocationUpdates(mLocationListener);
         mIALocationManager.unregisterRegionListener(mRegionListener);
         unregisterReceiver(onComplete);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mIALocationManager.destroy();
     }
 
     /**
@@ -202,7 +217,7 @@ public class ImageViewActivity extends FragmentActivity {
     };
 
     private void showFloorPlanImage(String filePath) {
-        Log.w(TAG, "showFloorPlanImage: " + filePath + "; MetersTopixels=" + mFloorPlan.getMetersToPixels());
+        Log.w(TAG, "showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
         mImageView.setRadius(mFloorPlan.getMetersToPixels() * dotRadius);
         mImageView.setImage(ImageSource.uri(filePath));
         mProgressDialog.setMessage("请移动方位以完成初始化操作");
@@ -250,8 +265,8 @@ public class ImageViewActivity extends FragmentActivity {
                             Toast.makeText(ImageViewActivity.this,
                                     (result.getError() != null
                                             ? "error loading floor plan: " + result.getError()
-                                            : "access to floor plan denied"), Toast.LENGTH_LONG)
-                                    .show();
+                                            : "access to floor plan denied"),
+                                    Toast.LENGTH_LONG).show();
                         }
                     }
                 }

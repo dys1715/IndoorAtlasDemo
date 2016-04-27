@@ -18,5 +18,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
-        android:text="Click here"/>
+        android:text="Click here\n "
+        android:background="@color/ia_blue_tint"/>
 </RelativeLayout>
