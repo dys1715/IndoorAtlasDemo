@@ -2,10 +2,14 @@ package net.winsion.www.indooratlasdemo.imageview;
 
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 
@@ -19,6 +23,16 @@ public class BlueDotView extends SubsamplingScaleImageView {
 
     private float radius = 1.0f;
     private PointF dotCenter = null;
+    private Bitmap compassIndicatorArrowBitmap; //指南针箭头
+    private float compassIndicatorArrowRotateDegree; //箭头旋转角度
+    private float defaultLocationCircleRadius;
+    private float compassIndicatorGap;
+    private float compassIndicatorCircleRotateDegree = 0;
+    private float compassRadius;
+    private float compassArcWidth;
+    private float compassIndicatorCircleRadius;
+    private Paint indicatorArcPaint;
+    private Paint indicatorCirclePaint;
 
     public void setRadius(float radius) {
         this.radius = radius;
@@ -40,6 +54,24 @@ public class BlueDotView extends SubsamplingScaleImageView {
     private void initialise() {
         setWillNotDraw(false);
         setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_CENTER);
+        compassIndicatorArrowBitmap = BitmapFactory.decodeResource(this.getContext().getResources(), R.mipmap.compass);
+        // setting dufault values
+        defaultLocationCircleRadius = setValue(8f);
+        compassIndicatorGap = setValue(15.0f);
+        compassRadius = setValue(38f);
+        compassArcWidth = setValue(4.0f);
+        compassIndicatorCircleRadius = setValue(2.6f);
+        // default indicatorArcPaint
+        indicatorArcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        indicatorArcPaint.setStyle(Paint.Style.STROKE);
+        indicatorArcPaint.setColor(0xFFFA4A8D);
+        indicatorArcPaint.setStrokeWidth(compassArcWidth);
+        // default indicatorCirclePaint
+        indicatorCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        indicatorCirclePaint.setAntiAlias(true);
+        indicatorCirclePaint.setStyle(Paint.Style.FILL);
+        indicatorCirclePaint.setShadowLayer(3, 1, 1, 0xFF909090);
+        indicatorCirclePaint.setColor(0xFF00F0FF);
     }
 
     @Override
@@ -61,6 +93,49 @@ public class BlueDotView extends SubsamplingScaleImageView {
             paint.setColor(getResources().getColor(R.color.ia_blue));
             canvas.drawCircle(vPoint.x, vPoint.y, scaledRadius, paint);
 
+            //画箭头
+            if (compassIndicatorArrowBitmap != null) {
+                canvas.save();
+                canvas.rotate(this.compassIndicatorArrowRotateDegree,
+                        vPoint.x, vPoint.y);
+                canvas.drawBitmap(compassIndicatorArrowBitmap,
+                        vPoint.x - compassIndicatorArrowBitmap.getWidth() / 2,
+                        vPoint.y - defaultLocationCircleRadius - compassIndicatorGap,
+                        new Paint());
+                canvas.restore();
+                //画圆弧线
+//                if (360 - (this.compassIndicatorArrowRotateDegree - this.compassIndicatorCircleRotateDegree) > 180) {
+//                    canvas.drawArc(new RectF(vPoint.x - compassRadius,
+//                                    vPoint.y - compassRadius,
+//                                    vPoint.x + compassRadius,
+//                                    vPoint.y + compassRadius),
+//                            -90 + this.compassIndicatorCircleRotateDegree,
+//                            (this.compassIndicatorArrowRotateDegree - this.compassIndicatorCircleRotateDegree),
+//                            false, indicatorArcPaint);
+//                } else {
+//                    canvas.drawArc(new RectF(vPoint.x - compassRadius,
+//                                    vPoint.y - compassRadius,
+//                                    vPoint.x + compassRadius,
+//                                    vPoint.y + compassRadius),
+//                            -90 + this.compassIndicatorArrowRotateDegree,
+//                            360 - (this.compassIndicatorArrowRotateDegree - this
+//                                    .compassIndicatorCircleRotateDegree),
+//                            false, indicatorArcPaint);
+//                }
+
+            }
         }
+    }
+
+    protected float setValue(float value) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, getResources().getDisplayMetrics());
+    }
+
+    public float getCompassIndicatorArrowRotateDegree() {
+        return compassIndicatorArrowRotateDegree;
+    }
+
+    public void setCompassIndicatorArrowRotateDegree(float compassIndicatorArrowRotateDegree) {
+        this.compassIndicatorArrowRotateDegree = compassIndicatorArrowRotateDegree;
     }
 }

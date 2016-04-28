@@ -9,6 +9,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.PointF;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,7 +45,7 @@ import net.winsion.www.indooratlasdemo.imageview.BlueDotView;
 
 import java.io.File;
 
-public class ImageViewActivity extends FragmentActivity {
+public class ImageViewActivity extends FragmentActivity implements SensorEventListener {
 
     private static final String TAG = "IndoorAtlasExample";
     private static final int EMPTY_MSG = 10000;
@@ -58,6 +62,7 @@ public class ImageViewActivity extends FragmentActivity {
     private DownloadManager mDownloadManager;
     private TextView mTextView;
     private ProgressDialog mProgressDialog;
+    private SensorManager mSensorManager;
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
         @SuppressLint("SetTextI18n")
@@ -145,6 +150,9 @@ public class ImageViewActivity extends FragmentActivity {
                 .withAccuracy(0.1f)
                 .withAltitude(1000)
                 .build();
+
+        //获取传感器服务
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         
         /* optional setup of floor plan id
            if setLocation is not called, then location manager tries to find
@@ -166,6 +174,8 @@ public class ImageViewActivity extends FragmentActivity {
         // starts receiving location updates
         mIALocationManager.requestLocationUpdates(IALocationRequest.create(), mLocationListener);
         mIALocationManager.registerRegionListener(mRegionListener);
+        //注册方向传感器
+        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_NORMAL);
         registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
     }
 
@@ -174,6 +184,7 @@ public class ImageViewActivity extends FragmentActivity {
         super.onPause();
         mIALocationManager.removeLocationUpdates(mLocationListener);
         mIALocationManager.unregisterRegionListener(mRegionListener);
+        mSensorManager.unregisterListener(this);
         unregisterReceiver(onComplete);
     }
 
@@ -220,6 +231,7 @@ public class ImageViewActivity extends FragmentActivity {
         Log.w(TAG, "showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
         mImageView.setRadius(mFloorPlan.getMetersToPixels() * dotRadius);
         mImageView.setImage(ImageSource.uri(filePath));
+//        mImageView.setCompassIndicatorArrowRotateDegree(60);
         mProgressDialog.setMessage("请移动方位以完成初始化操作");
     }
 
@@ -280,5 +292,22 @@ public class ImageViewActivity extends FragmentActivity {
         }
     }
 
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (mImageView != null && mImageView.isReady()) {
+            float mapDegree = 90; // the rotate between reality map to northern
+            float degree = 0;
+            if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
+                degree = event.values[0];
+            }
+
+            mImageView.setCompassIndicatorArrowRotateDegree(mapDegree + degree);
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
 }
 
