@@ -151,6 +151,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         findViewById(R.id.btn_save_point).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //把坐标信息保存到根目录points.txt文件
                 CommonMethord.saveFile(CommonMethord.ListToStr(mPointXYList));
             }
         });
