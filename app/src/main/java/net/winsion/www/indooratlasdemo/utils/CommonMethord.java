@@ -6,6 +6,8 @@ import net.winsion.www.indooratlasdemo.bean.PointXY;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -17,9 +19,9 @@ public class CommonMethord {
         String filePath = null;
         boolean hasSDCard = Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
         if (hasSDCard) {
-            filePath = Environment.getExternalStorageDirectory().toString() + File.separator + "points.txt";
+            filePath = Environment.getExternalStorageDirectory().toString() + File.separator + "points_" + getCurrentTime() + ".txt";
         } else {
-            filePath = Environment.getDownloadCacheDirectory().toString() + File.separator + "points.txt";
+            filePath = Environment.getDownloadCacheDirectory().toString() + File.separator + "points_" + getCurrentTime() + ".txt";
         }
         try {
             File file = new File(filePath);
@@ -44,5 +46,9 @@ public class CommonMethord {
                     + "]" + '\n');
         }
         return str.toString();
+    }
+
+    public static String getCurrentTime(){
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
     }
 }
