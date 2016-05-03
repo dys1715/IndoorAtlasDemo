@@ -34,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onLocationChanged(IALocation iaLocation) {
 //            Logger.d("纬度=" + iaLocation.getLatitude() + ";经度=" + iaLocation.getLongitude());
-            mTextView.append("latitude纬度:" + iaLocation.getLatitude() + '\n'
+            mTextView.setText("");
+            mTextView.setText("latitude纬度:" + iaLocation.getLatitude() + '\n'
                     + "longitude经度:" + iaLocation.getLongitude() + '\n'
                     + "Accuracy精度:" + iaLocation.getAccuracy() + '\n'
                     + "Altitude高度:" + iaLocation.getAltitude() + '\n'

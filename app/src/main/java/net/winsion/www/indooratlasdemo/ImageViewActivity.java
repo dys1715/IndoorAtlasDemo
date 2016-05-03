@@ -23,6 +23,9 @@ import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
+import android.view.animation.TranslateAnimation;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,9 +44,13 @@ import com.indooratlas.android.sdk.resources.IAResultCallback;
 import com.indooratlas.android.sdk.resources.IATask;
 import com.orhanobut.logger.Logger;
 
+import net.winsion.www.indooratlasdemo.bean.PointXY;
 import net.winsion.www.indooratlasdemo.imageview.BlueDotView;
+import net.winsion.www.indooratlasdemo.utils.CommonMethord;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ImageViewActivity extends FragmentActivity implements SensorEventListener {
 
@@ -63,30 +70,35 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
     private TextView mTextView;
     private ProgressDialog mProgressDialog;
     private SensorManager mSensorManager;
+    private List<PointXY> mPointXYList = new ArrayList<>();
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
         @SuppressLint("SetTextI18n")
         @Override
         public void onLocationChanged(IALocation location) {
-            mTextView.setText("latitude纬度:" + location.getLatitude() + '\n'
-                    + "longitude经度:" + location.getLongitude() + '\n'
-                    + "Accuracy精度:" + location.getAccuracy() + '\n'
-                    + "Altitude高度:" + location.getAltitude() + '\n'
-                    + "FloorLevel:" + location.getFloorLevel() + '\n'
-                    + "Bearing方位:" + location.getBearing() + '\n'
-                    + "Region:" + location.getRegion().toString()); //Returns bearing in degrees, in range of (0.0, 360.0].
-            if (mImageView != null && mImageView.isReady()) {
+            if (mFloorPlan != null) {
+                Logger.i(mFloorPlan.toString());
                 IALatLng latLng = new IALatLng(location.getLatitude(), location.getLongitude());
                 PointF point = mFloorPlan.coordinateToPoint(latLng);
-                Logger.i(mFloorPlan.toString());
-                mTextView.append("pointX:" + point.x + '\n'
-                        + "pointY:" + point.y + '\n'
-                        + "bitmapWidth:" + mFloorPlan.getBitmapWidth() + '\n'
-                        + "bitmapHeight:" + mFloorPlan.getBitmapHeight());
-                mImageView.setDotCenter(point);
-                mImageView.postInvalidate();
-                if (mProgressDialog.isShowing()) {
-                    mHandler.sendEmptyMessage(EMPTY_MSG);
+                mPointXYList.add(new PointXY(point.x, point.y, location.getLatitude(), location.getLongitude()));
+
+                mTextView.setText("latitude纬度:" + location.getLatitude() + '\n'
+                        + "longitude经度:" + location.getLongitude() + '\n'
+                        + "Accuracy精度:" + location.getAccuracy() + '\n'
+                        + "Altitude高度:" + location.getAltitude() + '\n'
+                        + "FloorLevel:" + location.getFloorLevel() + '\n'
+                        + "Bearing方位:" + location.getBearing() + '\n'
+                        + "Region:" + location.getRegion().toString()
+                        + "pointX:" + point.x + "|pointY:" + point.y + '\n'
+                        + "bitmapWidth&Height:" + mFloorPlan.getBitmapWidth() + "*" + mFloorPlan.getBitmapHeight());
+
+                if (mImageView != null && mImageView.isReady()) {
+                    mImageView.setDotCenter(point);
+                    mImageView.setRangeIndicatorMeters(location.getAccuracy());
+                    mImageView.postInvalidate();
+                    if (mProgressDialog.isShowing()) {
+                        mHandler.sendEmptyMessage(EMPTY_MSG);
+                    }
                 }
             }
         }
@@ -136,6 +148,12 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
 
         mTextView = (TextView) findViewById(R.id.text_img);
         mImageView = (BlueDotView) findViewById(R.id.imageView);
+        findViewById(R.id.btn_save_point).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CommonMethord.saveFile(CommonMethord.ListToStr(mPointXYList));
+            }
+        });
 
         mProgressDialog = new ProgressDialog(ImageViewActivity.this);
         mProgressDialog.show();
@@ -186,6 +204,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         mIALocationManager.unregisterRegionListener(mRegionListener);
         mSensorManager.unregisterListener(this);
         unregisterReceiver(onComplete);
+        Toast.makeText(getApplicationContext(), "定位中止", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -232,6 +251,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         mImageView.setRadius(mFloorPlan.getMetersToPixels() * dotRadius);
         mImageView.setImage(ImageSource.uri(filePath));
 //        mImageView.setCompassIndicatorArrowRotateDegree(60);
+        mImageView.setDotCenter(new PointF(500, 500));
         mProgressDialog.setMessage("请移动方位以完成初始化操作");
     }
 
@@ -295,13 +315,14 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (mImageView != null && mImageView.isReady()) {
-            float mapDegree = 90; // the rotate between reality map to northern
+            float mapDegree = 85; // the rotate between reality map to northern
             float degree = 0;
             if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
                 degree = event.values[0];
             }
 
             mImageView.setCompassIndicatorArrowRotateDegree(mapDegree + degree);
+//            mImageView.postInvalidate();
         }
     }
 

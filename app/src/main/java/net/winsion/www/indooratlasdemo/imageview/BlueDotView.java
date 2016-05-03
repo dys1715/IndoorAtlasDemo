@@ -10,6 +10,7 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.TypedValue;
+import android.view.animation.TranslateAnimation;
 
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 
@@ -25,6 +26,7 @@ public class BlueDotView extends SubsamplingScaleImageView {
     private PointF dotCenter = null;
     private Bitmap compassIndicatorArrowBitmap; //指南针箭头
     private float compassIndicatorArrowRotateDegree; //箭头旋转角度
+    private float rangeIndicatorMeters; //范围指示器
     private float defaultLocationCircleRadius;
     private float compassIndicatorGap;
     private float compassIndicatorCircleRotateDegree = 0;
@@ -33,6 +35,7 @@ public class BlueDotView extends SubsamplingScaleImageView {
     private float compassIndicatorCircleRadius;
     private Paint indicatorArcPaint;
     private Paint indicatorCirclePaint;
+    private Canvas mCanvas;
 
     public void setRadius(float radius) {
         this.radius = radius;
@@ -88,11 +91,12 @@ public class BlueDotView extends SubsamplingScaleImageView {
             Paint paint = new Paint();
             paint.setAntiAlias(true);
             paint.setStyle(Paint.Style.FILL);
-//            paint.setColor(getResources().getColor(R.color.ia_blue_tint));
-//            canvas.drawCircle(vPoint.x, vPoint.y, scaledRadius * 10, paint);
+            //画范围指示器
+            paint.setColor(getResources().getColor(R.color.ia_blue_tint));
+            canvas.drawCircle(vPoint.x, vPoint.y, scaledRadius * rangeIndicatorMeters, paint);
+            //画定位点
             paint.setColor(getResources().getColor(R.color.ia_blue));
             canvas.drawCircle(vPoint.x, vPoint.y, scaledRadius, paint);
-
             //画箭头
             if (compassIndicatorArrowBitmap != null) {
                 canvas.save();
@@ -131,11 +135,11 @@ public class BlueDotView extends SubsamplingScaleImageView {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, getResources().getDisplayMetrics());
     }
 
-    public float getCompassIndicatorArrowRotateDegree() {
-        return compassIndicatorArrowRotateDegree;
-    }
-
     public void setCompassIndicatorArrowRotateDegree(float compassIndicatorArrowRotateDegree) {
         this.compassIndicatorArrowRotateDegree = compassIndicatorArrowRotateDegree;
+    }
+
+    public void setRangeIndicatorMeters(float rangeIndicatorMeters){
+        this.rangeIndicatorMeters = rangeIndicatorMeters;
     }
 }
