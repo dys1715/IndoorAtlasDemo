@@ -1,20 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
     <TextView
         android:id="@+id/text_img"
-        android:text="show some parameters"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:text="show some parameters"/>
+
     <net.winsion.www.indooratlasdemo.imageview.BlueDotView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
     <Button
         android:id="@+id/btn_save_point"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:text="save point data"/>
+        android:layout_above="@+id/btn_get_points"
+        android:text="save points data"/>
+    <Button
+        android:id="@+id/btn_get_points"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="show points data"
+        android:layout_alignParentBottom="true"/>
 </RelativeLayout>

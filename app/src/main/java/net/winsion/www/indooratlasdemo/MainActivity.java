@@ -83,16 +83,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mIALocationManager.requestLocationUpdates(IALocationRequest.create(), mIaLocationListener);
-        mIALocationManager.registerRegionListener(mRegionListener);
+//        mIALocationManager.requestLocationUpdates(IALocationRequest.create(), mIaLocationListener);
+//        mIALocationManager.registerRegionListener(mRegionListener);
 
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mIALocationManager.removeLocationUpdates(mIaLocationListener);
-        mIALocationManager.unregisterRegionListener(mRegionListener);
+//        mIALocationManager.removeLocationUpdates(mIaLocationListener);
+//        mIALocationManager.unregisterRegionListener(mRegionListener);
     }
 
     @Override

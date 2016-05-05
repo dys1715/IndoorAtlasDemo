@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.animation.TranslateAnimation;
@@ -100,7 +101,7 @@ public class BlueDotView extends SubsamplingScaleImageView {
             //画箭头
             if (compassIndicatorArrowBitmap != null) {
                 canvas.save();
-                canvas.rotate(this.compassIndicatorArrowRotateDegree,
+                canvas.rotate(getCompassIndicatorArrowRotateDegree(),
                         vPoint.x, vPoint.y);
                 canvas.drawBitmap(compassIndicatorArrowBitmap,
                         vPoint.x - compassIndicatorArrowBitmap.getWidth() / 2,
@@ -137,6 +138,10 @@ public class BlueDotView extends SubsamplingScaleImageView {
 
     public void setCompassIndicatorArrowRotateDegree(float compassIndicatorArrowRotateDegree) {
         this.compassIndicatorArrowRotateDegree = compassIndicatorArrowRotateDegree;
+    }
+
+    public float getCompassIndicatorArrowRotateDegree() {
+        return compassIndicatorArrowRotateDegree;
     }
 
     public void setRangeIndicatorMeters(float rangeIndicatorMeters){

@@ -1,6 +1,7 @@
 package net.winsion.www.indooratlasdemo;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -71,6 +72,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
     private ProgressDialog mProgressDialog;
     private SensorManager mSensorManager;
     private List<PointXY> mPointXYList = new ArrayList<>();
+    private Button savePoints, showPoints;
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
         @SuppressLint("SetTextI18n")
@@ -148,11 +150,31 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
 
         mTextView = (TextView) findViewById(R.id.text_img);
         mImageView = (BlueDotView) findViewById(R.id.imageView);
-        findViewById(R.id.btn_save_point).setOnClickListener(new View.OnClickListener() {
+        savePoints = (Button) findViewById(R.id.btn_save_point);
+        showPoints = (Button) findViewById(R.id.btn_get_points);
+
+        savePoints.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //把坐标信息保存到根目录points.txt文件
-                CommonMethord.saveFile(CommonMethord.ListToStr(mPointXYList));
+                boolean isSave = CommonMethord.saveFile(CommonMethord.ListToStr(mPointXYList));
+                if (isSave) {
+                    Toast.makeText(getApplicationContext(), "坐标点保存成功", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "坐标点保存失败", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        showPoints.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String pointsData = CommonMethord.getFile(CommonMethord.getCurrentTime());
+                new AlertDialog.Builder(ImageViewActivity.this)
+                        .setTitle("points data")
+                        .setMessage(pointsData)
+                        .create()
+                        .show();
             }
         });
 
@@ -176,7 +198,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         /* optional setup of floor plan id
            if setLocation is not called, then location manager tries to find
            location automatically */
-//        setLocation(getString(R.string.indooratlas_floor_plan_id));
+        setLocation(getString(R.string.indooratlas_floor_plan_id));
 
     }
 
@@ -252,7 +274,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         mImageView.setRadius(mFloorPlan.getMetersToPixels() * dotRadius);
         mImageView.setImage(ImageSource.uri(filePath));
 //        mImageView.setCompassIndicatorArrowRotateDegree(60);
-        mImageView.setDotCenter(new PointF(500, 500));
+//        mImageView.setDotCenter(new PointF(500, 500));
         mProgressDialog.setMessage("请移动方位以完成初始化操作");
     }
 
@@ -323,7 +345,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
             }
 
             mImageView.setCompassIndicatorArrowRotateDegree(mapDegree + degree);
-//            mImageView.postInvalidate();
+            mImageView.postInvalidate();
         }
     }
 
