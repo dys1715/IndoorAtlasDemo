@@ -3,18 +3,18 @@ package net.winsion.www.indooratlasdemo.bean;
 /**
  * Created by D on 2016/4/29 0029.
  */
-public class PointXY {
+public class Point {
     private float pointX;
     private float pointY;
     private double latitude;
     private double longitude;
 
-    public PointXY(float pointX, float pointY) {
+    public Point(float pointX, float pointY) {
         this.pointX = pointX;
         this.pointY = pointY;
     }
 
-    public PointXY(float pointX, float pointY, double latitude, double longitude) {
+    public Point(float pointX, float pointY, double latitude, double longitude) {
         this.pointX = pointX;
         this.pointY = pointY;
         this.latitude = latitude;

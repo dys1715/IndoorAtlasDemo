@@ -25,7 +25,6 @@ import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,8 +44,8 @@ import com.indooratlas.android.sdk.resources.IAResultCallback;
 import com.indooratlas.android.sdk.resources.IATask;
 import com.orhanobut.logger.Logger;
 
-import net.winsion.www.indooratlasdemo.bean.PointXY;
-import net.winsion.www.indooratlasdemo.imageview.BlueDotView;
+import net.winsion.www.indooratlasdemo.bean.Point;
+import net.winsion.www.indooratlasdemo.view.BlueDotView;
 import net.winsion.www.indooratlasdemo.utils.CommonMethord;
 
 import java.io.File;
@@ -71,7 +70,8 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
     private TextView mTextView;
     private ProgressDialog mProgressDialog;
     private SensorManager mSensorManager;
-    private List<PointXY> mPointXYList = new ArrayList<>();
+    private List<Point> mPointXYList = new ArrayList<>();
+    private List<Point> pointStartEnd = new ArrayList<>(2);
     private Button savePoints, showPoints;
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
@@ -82,7 +82,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
                 Logger.i(mFloorPlan.toString());
                 IALatLng latLng = new IALatLng(location.getLatitude(), location.getLongitude());
                 PointF point = mFloorPlan.coordinateToPoint(latLng);
-                mPointXYList.add(new PointXY(point.x, point.y, location.getLatitude(), location.getLongitude()));
+                mPointXYList.add(new Point(point.x, point.y, location.getLatitude(), location.getLongitude()));
 
                 mTextView.setText("latitude纬度:" + location.getLatitude() + '\n'
                         + "longitude经度:" + location.getLongitude() + '\n'
@@ -95,7 +95,16 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
                         + "bitmapWidth&Height:" + mFloorPlan.getBitmapWidth() + "*" + mFloorPlan.getBitmapHeight());
 
                 if (mImageView != null && mImageView.isReady()) {
-                    mImageView.setDotCenter(point);
+//                    if (mPointXYList.size()>=2){
+//                        PointF startPoint = new PointF(mPointXYList.get(mPointXYList.size()-2).getPointX(),
+//                                mPointXYList.get(mPointXYList.size()-2).getPointY());
+//                        PointF endPoint = new PointF(mPointXYList.get(mPointXYList.size()-1).getPointX(),
+//                                mPointXYList.get(mPointXYList.size()-1).getPointY());
+//                        Logger.w("startPoint:" + startPoint.toString());
+//                        mImageView.setStartEndPoint(startPoint,endPoint);
+//                    }else {
+                        mImageView.setDotCenter(point);
+//                    }
                     mImageView.setRangeIndicatorMeters(location.getAccuracy());
                     mImageView.postInvalidate();
                     if (mProgressDialog.isShowing()) {
@@ -147,6 +156,8 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         setContentView(R.layout.activity_image_view);
         // prevent the screen going to sleep while app is on foreground
         findViewById(android.R.id.content).setKeepScreenOn(true);
+        pointStartEnd.add(new Point(0,0));
+        pointStartEnd.add(new Point(1,1));
 
         mTextView = (TextView) findViewById(R.id.text_img);
         mImageView = (BlueDotView) findViewById(R.id.imageView);

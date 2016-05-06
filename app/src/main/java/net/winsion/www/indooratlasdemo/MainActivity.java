@@ -2,28 +2,15 @@ package net.winsion.www.indooratlasdemo;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.indooratlas.android.sdk.IALocation;
 import com.indooratlas.android.sdk.IALocationListener;
 import com.indooratlas.android.sdk.IALocationManager;
-import com.indooratlas.android.sdk.IALocationRequest;
 import com.indooratlas.android.sdk.IARegion;
-import com.indooratlas.android.sdk.resources.IAFloorPlan;
-import com.indooratlas.android.sdk.resources.IAResourceManager;
-import com.indooratlas.android.sdk.resources.IAResult;
-import com.indooratlas.android.sdk.resources.IAResultCallback;
-import com.indooratlas.android.sdk.resources.IATask;
 import com.orhanobut.logger.Logger;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
-
-import net.winsion.www.indooratlasdemo.imageview.BlueDotView;
 
 public class MainActivity extends AppCompatActivity {
 

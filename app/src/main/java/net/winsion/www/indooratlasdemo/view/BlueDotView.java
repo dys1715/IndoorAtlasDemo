@@ -1,5 +1,4 @@
-package net.winsion.www.indooratlasdemo.imageview;
-
+package net.winsion.www.indooratlasdemo.view;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -7,11 +6,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
-import android.graphics.RectF;
-import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
-import android.view.animation.TranslateAnimation;
 
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 
@@ -30,21 +26,6 @@ public class BlueDotView extends SubsamplingScaleImageView {
     private float rangeIndicatorMeters; //范围指示器
     private float defaultLocationCircleRadius;
     private float compassIndicatorGap;
-    private float compassIndicatorCircleRotateDegree = 0;
-    private float compassRadius;
-    private float compassArcWidth;
-    private float compassIndicatorCircleRadius;
-    private Paint indicatorArcPaint;
-    private Paint indicatorCirclePaint;
-    private Canvas mCanvas;
-
-    public void setRadius(float radius) {
-        this.radius = radius;
-    }
-
-    public void setDotCenter(PointF dotCenter) {
-        this.dotCenter = dotCenter;
-    }
 
     public BlueDotView(Context context) {
         this(context, null);
@@ -62,30 +43,22 @@ public class BlueDotView extends SubsamplingScaleImageView {
         // setting dufault values
         defaultLocationCircleRadius = setValue(8f);
         compassIndicatorGap = setValue(15.0f);
-        compassRadius = setValue(38f);
-        compassArcWidth = setValue(4.0f);
-        compassIndicatorCircleRadius = setValue(2.6f);
-        // default indicatorArcPaint
-        indicatorArcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        indicatorArcPaint.setStyle(Paint.Style.STROKE);
-        indicatorArcPaint.setColor(0xFFFA4A8D);
-        indicatorArcPaint.setStrokeWidth(compassArcWidth);
-        // default indicatorCirclePaint
-        indicatorCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        indicatorCirclePaint.setAntiAlias(true);
-        indicatorCirclePaint.setStyle(Paint.Style.FILL);
-        indicatorCirclePaint.setShadowLayer(3, 1, 1, 0xFF909090);
-        indicatorCirclePaint.setColor(0xFF00F0FF);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
         if (!isReady()) {
             return;
         }
+        drawDot(canvas);
+    }
 
+    /**
+     * 画定位点&方向指示器&范围指示器
+     * @param canvas
+     */
+    private void drawDot(Canvas canvas) {
         if (dotCenter != null) {
             PointF vPoint = sourceToViewCoord(dotCenter);
             float scaledRadius = getScale() * radius;
@@ -108,28 +81,17 @@ public class BlueDotView extends SubsamplingScaleImageView {
                         vPoint.y - defaultLocationCircleRadius - compassIndicatorGap,
                         new Paint());
                 canvas.restore();
-                //画圆弧线
-//                if (360 - (this.compassIndicatorArrowRotateDegree - this.compassIndicatorCircleRotateDegree) > 180) {
-//                    canvas.drawArc(new RectF(vPoint.x - compassRadius,
-//                                    vPoint.y - compassRadius,
-//                                    vPoint.x + compassRadius,
-//                                    vPoint.y + compassRadius),
-//                            -90 + this.compassIndicatorCircleRotateDegree,
-//                            (this.compassIndicatorArrowRotateDegree - this.compassIndicatorCircleRotateDegree),
-//                            false, indicatorArcPaint);
-//                } else {
-//                    canvas.drawArc(new RectF(vPoint.x - compassRadius,
-//                                    vPoint.y - compassRadius,
-//                                    vPoint.x + compassRadius,
-//                                    vPoint.y + compassRadius),
-//                            -90 + this.compassIndicatorArrowRotateDegree,
-//                            360 - (this.compassIndicatorArrowRotateDegree - this
-//                                    .compassIndicatorCircleRotateDegree),
-//                            false, indicatorArcPaint);
-//                }
-
             }
+
         }
+    }
+
+    public void setRadius(float radius) {
+        this.radius = radius;
+    }
+
+    public void setDotCenter(PointF dotCenter) {
+        this.dotCenter = dotCenter;
     }
 
     protected float setValue(float value) {
@@ -141,7 +103,7 @@ public class BlueDotView extends SubsamplingScaleImageView {
     }
 
     public float getCompassIndicatorArrowRotateDegree() {
-        return compassIndicatorArrowRotateDegree;
+        return this.compassIndicatorArrowRotateDegree;
     }
 
     public void setRangeIndicatorMeters(float rangeIndicatorMeters){

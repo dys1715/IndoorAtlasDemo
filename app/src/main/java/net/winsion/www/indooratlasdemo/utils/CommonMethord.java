@@ -2,7 +2,7 @@ package net.winsion.www.indooratlasdemo.utils;
 
 import android.os.Environment;
 
-import net.winsion.www.indooratlasdemo.bean.PointXY;
+import net.winsion.www.indooratlasdemo.bean.Point;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -67,7 +67,7 @@ public class CommonMethord {
         }
     }
 
-    public static String ListToStr(List<PointXY> list) {
+    public static String ListToStr(List<Point> list) {
         StringBuilder str = new StringBuilder();
         for (int i = 0; i < list.size(); i++) {
             str.append(i)
