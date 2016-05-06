@@ -27,4 +27,10 @@
         android:layout_height="wrap_content"
         android:text="show points data"
         android:layout_alignParentBottom="true"/>
+    <Button
+        android:id="@+id/btn_change_display_mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="切换为地图跟随"
+        android:layout_alignParentRight="true"/>
 </RelativeLayout>

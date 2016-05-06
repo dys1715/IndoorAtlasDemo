@@ -26,6 +26,7 @@ public class BlueDotView extends SubsamplingScaleImageView {
     private float rangeIndicatorMeters; //范围指示器
     private float defaultLocationCircleRadius;
     private float compassIndicatorGap;
+    private boolean drawIndicator = true;
 
     public BlueDotView(Context context) {
         this(context, null);
@@ -72,7 +73,8 @@ public class BlueDotView extends SubsamplingScaleImageView {
             paint.setColor(getResources().getColor(R.color.ia_blue));
             canvas.drawCircle(vPoint.x, vPoint.y, scaledRadius, paint);
             //画箭头
-            if (compassIndicatorArrowBitmap != null) {
+            if (drawIndicator && compassIndicatorArrowBitmap != null) {
+
                 canvas.save();
                 canvas.rotate(getCompassIndicatorArrowRotateDegree(),
                         vPoint.x, vPoint.y);
@@ -84,6 +86,10 @@ public class BlueDotView extends SubsamplingScaleImageView {
             }
 
         }
+    }
+
+    public void setDrawIndicator(boolean drawIndicator) {
+        this.drawIndicator = drawIndicator;
     }
 
     public void setRadius(float radius) {

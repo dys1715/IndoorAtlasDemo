@@ -56,9 +56,10 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
 
     private static final String TAG = "IndoorAtlasExample";
     private static final int EMPTY_MSG = 10000;
-
+    private static final int MAP_FIXED = 1; //地图固定
+    private static final int MAP_FOLLOW = 2; //地图跟随
     // blue dot radius in meters
-    private static final float dotRadius = 0.25f;
+    private static final float dotRadius = 0.3f;
 
     private IALocationManager mIALocationManager;
     private IAResourceManager mFloorPlanManager;
@@ -71,8 +72,8 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
     private ProgressDialog mProgressDialog;
     private SensorManager mSensorManager;
     private List<Point> mPointXYList = new ArrayList<>();
-    private List<Point> pointStartEnd = new ArrayList<>(2);
-    private Button savePoints, showPoints;
+    private Button savePoints, showPoints, changeMode;
+    private int mapMode;
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
         @SuppressLint("SetTextI18n")
@@ -95,16 +96,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
                         + "bitmapWidth&Height:" + mFloorPlan.getBitmapWidth() + "*" + mFloorPlan.getBitmapHeight());
 
                 if (mImageView != null && mImageView.isReady()) {
-//                    if (mPointXYList.size()>=2){
-//                        PointF startPoint = new PointF(mPointXYList.get(mPointXYList.size()-2).getPointX(),
-//                                mPointXYList.get(mPointXYList.size()-2).getPointY());
-//                        PointF endPoint = new PointF(mPointXYList.get(mPointXYList.size()-1).getPointX(),
-//                                mPointXYList.get(mPointXYList.size()-1).getPointY());
-//                        Logger.w("startPoint:" + startPoint.toString());
-//                        mImageView.setStartEndPoint(startPoint,endPoint);
-//                    }else {
-                        mImageView.setDotCenter(point);
-//                    }
+                    mImageView.setDotCenter(point);
                     mImageView.setRangeIndicatorMeters(location.getAccuracy());
                     mImageView.postInvalidate();
                     if (mProgressDialog.isShowing()) {
@@ -156,13 +148,15 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         setContentView(R.layout.activity_image_view);
         // prevent the screen going to sleep while app is on foreground
         findViewById(android.R.id.content).setKeepScreenOn(true);
-        pointStartEnd.add(new Point(0,0));
-        pointStartEnd.add(new Point(1,1));
 
         mTextView = (TextView) findViewById(R.id.text_img);
         mImageView = (BlueDotView) findViewById(R.id.imageView);
         savePoints = (Button) findViewById(R.id.btn_save_point);
         showPoints = (Button) findViewById(R.id.btn_get_points);
+        changeMode = (Button) findViewById(R.id.btn_change_display_mode);
+
+        //默认地图固定
+        mapMode = MAP_FIXED;
 
         savePoints.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -186,6 +180,21 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
                         .setMessage(pointsData)
                         .create()
                         .show();
+            }
+        });
+
+        changeMode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mapMode == MAP_FIXED) {
+                    mapMode = MAP_FOLLOW;
+                    mImageView.setDrawIndicator(false);
+                    changeMode.setText("切换为地图固定");
+                } else {
+                    mapMode = MAP_FIXED;
+                    mImageView.setDrawIndicator(true);
+                    changeMode.setText("切换为地图跟随");
+                }
             }
         });
 
@@ -213,11 +222,43 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
 
     }
 
+    /**
+     * 设置floorPlanId
+     *
+     * @param floorPlanId
+     */
     private void setLocation(String floorPlanId) {
         if (!TextUtils.isEmpty(floorPlanId)) {
             final IALocation location = IALocation.from(IARegion.floorPlan(floorPlanId));
             mIALocationManager.setLocation(location);
         }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (mImageView != null && mImageView.isReady()) {
+            float mapDegree = 85; // the rotate between reality map to northern
+            float degree = 0;
+            if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
+                degree = event.values[0];
+            }
+            showPoints.setText(degree + "");
+
+            if (mapMode == MAP_FIXED) {
+                //设置指示器旋转角度
+                mImageView.setCompassIndicatorArrowRotateDegree(mapDegree + degree);
+            }
+            if (mapMode == MAP_FOLLOW) {
+                //设置图片旋转
+                mImageView.setRotation(degree + mapDegree);
+            }
+            mImageView.postInvalidate();
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
     }
 
     @Override
@@ -280,6 +321,11 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         }
     };
 
+    /**
+     * 加载地图
+     *
+     * @param filePath
+     */
     private void showFloorPlanImage(String filePath) {
         Log.w(TAG, "showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
         mImageView.setRadius(mFloorPlan.getMetersToPixels() * dotRadius);
@@ -346,23 +392,5 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         }
     }
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (mImageView != null && mImageView.isReady()) {
-            float mapDegree = 85; // the rotate between reality map to northern
-            float degree = 0;
-            if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
-                degree = event.values[0];
-            }
-
-            mImageView.setCompassIndicatorArrowRotateDegree(mapDegree + degree);
-            mImageView.postInvalidate();
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
 }
 
