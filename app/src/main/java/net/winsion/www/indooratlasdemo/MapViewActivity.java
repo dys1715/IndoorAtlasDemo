@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -21,15 +22,13 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.indooratlas.android.sdk.IALocation;
 import com.indooratlas.android.sdk.IALocationListener;
 import com.indooratlas.android.sdk.IALocationManager;
@@ -42,30 +41,33 @@ import com.indooratlas.android.sdk.resources.IAResourceManager;
 import com.indooratlas.android.sdk.resources.IAResult;
 import com.indooratlas.android.sdk.resources.IAResultCallback;
 import com.indooratlas.android.sdk.resources.IATask;
+import com.onlylemi.mapview.library.MapView;
+import com.onlylemi.mapview.library.MapViewListener;
+import com.onlylemi.mapview.library.layer.LocationLayer;
 import com.orhanobut.logger.Logger;
 
 import net.winsion.www.indooratlasdemo.bean.Point;
-import net.winsion.www.indooratlasdemo.view.BlueDotView;
 import net.winsion.www.indooratlasdemo.utils.CommonMethord;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ImageViewActivity extends FragmentActivity implements SensorEventListener {
+/**
+ * Created by dys on 2016/5/8 0008.
+ * 室内定位
+ */
+public class MapViewActivity extends AppCompatActivity implements View.OnClickListener, SensorEventListener {
 
-    private static final String TAG = "IndoorAtlasExample";
     private static final int EMPTY_MSG = 10000;
     private static final int MAP_FIXED = 1; //地图固定
     private static final int MAP_FOLLOW = 2; //地图跟随
-    // blue dot radius in meters
-    private static final float dotRadius = 0.3f;
-
+    private MapView mapView;
+    private LocationLayer mLocationLayer;
     private IALocationManager mIALocationManager;
     private IAResourceManager mFloorPlanManager;
     private IATask<IAFloorPlan> mPendingAsyncResult;
     private IAFloorPlan mFloorPlan;
-    private BlueDotView mImageView;
     private long mDownloadId;
     private DownloadManager mDownloadManager;
     private TextView mTextView;
@@ -95,10 +97,10 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
                         + "pointX:" + point.x + "|pointY:" + point.y + '\n'
                         + "bitmapWidth&Height:" + mFloorPlan.getBitmapWidth() + "*" + mFloorPlan.getBitmapHeight());
 
-                if (mImageView != null && mImageView.isReady()) {
-                    mImageView.setDotCenter(point);
-                    mImageView.setRangeIndicatorMeters(location.getAccuracy());
-                    mImageView.postInvalidate();
+                if (mLocationLayer != null) {
+                    mLocationLayer.setCurrentPosition(point);
+                    mLocationLayer.setRangeIndicatorMeters(location.getAccuracy());
+                    mapView.refresh();
                     if (mProgressDialog.isShowing()) {
                         mHandler.sendEmptyMessage(EMPTY_MSG);
                     }
@@ -120,8 +122,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
             //获取配置的floorId
             if (region.getType() == IARegion.TYPE_FLOOR_PLAN) {
                 String id = region.getId();
-                Log.i(TAG, "floorPlan changed to " + id);
-                Toast.makeText(ImageViewActivity.this, id, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), id, Toast.LENGTH_SHORT).show();
                 fetchFloorPlan(id);
             }
 
@@ -143,123 +144,16 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
     };
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image_view);
-        // prevent the screen going to sleep while app is on foreground
-        findViewById(android.R.id.content).setKeepScreenOn(true);
-
-        mImageView = (BlueDotView) findViewById(R.id.imageView);
-        mTextView = (TextView) findViewById(R.id.text_img);
-        savePoints = (Button) findViewById(R.id.btn_save_point);
-        showPoints = (Button) findViewById(R.id.btn_get_points);
-        changeMode = (Button) findViewById(R.id.btn_change_display_mode);
-
-
-        //默认地图固定
-        mapMode = MAP_FIXED;
-
-        savePoints.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //把坐标信息保存到根目录points.txt文件
-                boolean isSave = CommonMethord.saveFile(CommonMethord.ListToStr(mPointXYList));
-                if (isSave) {
-                    Toast.makeText(getApplicationContext(), "坐标点保存成功", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "坐标点保存失败", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        showPoints.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String pointsData = CommonMethord.getFile(CommonMethord.getCurrentTime());
-                new AlertDialog.Builder(ImageViewActivity.this)
-                        .setTitle("points data")
-                        .setMessage(pointsData)
-                        .create()
-                        .show();
-            }
-        });
-
-        changeMode.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mapMode == MAP_FIXED) {
-                    mapMode = MAP_FOLLOW;
-//                    mImageView.setDrawIndicator(false);
-                    changeMode.setText("切换为地图固定");
-                } else {
-                    mapMode = MAP_FIXED;
-                    mImageView.setDrawIndicator(true);
-                    changeMode.setText("切换为地图跟随");
-                }
-            }
-        });
-
-        mProgressDialog = new ProgressDialog(ImageViewActivity.this);
-        mProgressDialog.show();
-        mProgressDialog.setMessage("初始化地图数据...");
-
+        setContentView(R.layout.activity_map_view);
+        initView();
         mDownloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         mIALocationManager = IALocationManager.create(this);
         mFloorPlanManager = IAResourceManager.create(this);
-
-        //配置属性参数（然而并没有用，都是云端决定的。。。）
-        (new IALocation.Builder())
-                .withAccuracy(0.1f)
-                .withAltitude(1000)
-                .build();
-
         //获取传感器服务
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        
-        /* optional setup of floor plan id
-           if setLocation is not called, then location manager tries to find
-           location automatically */
-        setLocation(getString(R.string.indooratlas_floor_plan_id));
-
-    }
-
-    /**
-     * 设置floorPlanId
-     *
-     * @param floorPlanId
-     */
-    private void setLocation(String floorPlanId) {
-        if (!TextUtils.isEmpty(floorPlanId)) {
-            final IALocation location = IALocation.from(IARegion.floorPlan(floorPlanId));
-            mIALocationManager.setLocation(location);
-        }
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (mImageView != null && mImageView.isReady()) {
-            float mapDegree = 85; // the rotate between reality map to northern
-            float degree = 0;
-            if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
-                degree = event.values[0];
-            }
-            showPoints.setText(degree + "");
-
-            if (mapMode == MAP_FIXED) {
-                //设置指示器旋转角度
-                mImageView.setCompassIndicatorArrowRotateDegree(mapDegree + degree);
-            }
-            if (mapMode == MAP_FOLLOW) {
-                //设置图片旋转
-                mImageView.setRotation(degree + mapDegree);
-            }
-            mImageView.postInvalidate();
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
+        setFloorPlanId(getString(R.string.indooratlas_floor_plan_id));
     }
 
     @Override
@@ -290,20 +184,107 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
     }
 
     /**
-     * Methods for fetching floor plan data and bitmap image.
-     * Method {@link #fetchFloorPlan(String id)} fetches floor plan data including URL to bitmap
+     * 设置floorPlanId
+     * @param floorPlanId 楼层id
+     */
+    private void setFloorPlanId(String floorPlanId) {
+        if (!TextUtils.isEmpty(floorPlanId)) {
+            final IALocation location = IALocation.from(IARegion.floorPlan(floorPlanId));
+            mIALocationManager.setLocation(location);
+        }
+    }
+
+    private void initView() {
+        Logger.init(this.getClass().getName());
+        mapView = (MapView) findViewById(R.id.map_view);
+        mTextView = (TextView) findViewById(R.id.text_img);
+        savePoints = (Button) findViewById(R.id.btn_save_point);
+        showPoints = (Button) findViewById(R.id.btn_get_points);
+        changeMode = (Button) findViewById(R.id.btn_change_display_mode);
+        savePoints.setOnClickListener(this);
+        showPoints.setOnClickListener(this);
+        changeMode.setOnClickListener(this);
+        //默认地图固定
+        mapMode = MAP_FIXED;
+        mProgressDialog = new ProgressDialog(MapViewActivity.this);
+        mProgressDialog.setMessage("初始化地图数据...");
+        mProgressDialog.show();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_save_point:
+                //把坐标信息保存到根目录points.txt文件
+                boolean isSave = CommonMethord.saveFile(CommonMethord.ListToStr(mPointXYList));
+                if (isSave) {
+                    Toast.makeText(getApplicationContext(), "坐标点保存成功", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "坐标点保存失败", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case R.id.btn_get_points:
+                String pointsData = CommonMethord.getFile(CommonMethord.getCurrentTime());
+                new AlertDialog.Builder(MapViewActivity.this)
+                        .setTitle("points data")
+                        .setMessage(pointsData)
+                        .create()
+                        .show();
+                break;
+            case R.id.btn_change_display_mode:
+                if (mapMode == MAP_FIXED) {
+                    mapMode = MAP_FOLLOW;
+                    changeMode.setText("切换为地图固定");
+                } else {
+                    mapMode = MAP_FIXED;
+                    changeMode.setText("切换为地图跟随");
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (mapView != null && mLocationLayer != null) {
+            float mapDegree = 85; // the rotate between reality map to northern
+            float degree = 0;
+            if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
+                degree = event.values[0];
+            }
+            showPoints.setText(degree + "");
+
+            if (mapMode == MAP_FIXED) {
+                //设置指示器旋转角度
+                mLocationLayer.setCompassIndicatorArrowRotateDegree(mapDegree + degree);
+            }
+            if (mapMode == MAP_FOLLOW) {
+                //设置图片旋转
+                mapView.setCurrentRotateDegrees(degree);
+            }
+            mapView.refresh();
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    /**
+     * Broadcast receiver for floor plan image download
      */
 
-     /*  Broadcast receiver for floor plan image download */
     private BroadcastReceiver onComplete = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0L);
             if (id != mDownloadId) {
-                Log.w(TAG, "Ignore unrelated download");
+                Logger.w("Ignore unrelated download");
                 return;
             }
-            Log.w(TAG, "Image download completed");
+            Logger.w("Image download completed");
             Bundle extras = intent.getExtras();
             DownloadManager.Query q = new DownloadManager.Query();
             q.setFilterById(extras.getLong(DownloadManager.EXTRA_DOWNLOAD_ID));
@@ -313,8 +294,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
                 int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
                 if (status == DownloadManager.STATUS_SUCCESSFUL) {
                     // process download
-                    String filePath = c.getString(c.getColumnIndex(
-                            DownloadManager.COLUMN_LOCAL_FILENAME));
+                    String filePath = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME));
                     showFloorPlanImage(filePath);
                 }
             }
@@ -327,11 +307,22 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
      * @param filePath
      */
     private void showFloorPlanImage(String filePath) {
-        Log.w(TAG, "showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
-        mImageView.setRadius(mFloorPlan.getMetersToPixels() * dotRadius);
-        mImageView.setImage(ImageSource.uri(filePath));
-//        mImageView.setCompassIndicatorArrowRotateDegree(60);
-//        mImageView.setDotCenter(new PointF(500, 500));
+        Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
+        mapView.loadMap(BitmapFactory.decodeFile(filePath));
+        mapView.setMapViewListener(new MapViewListener() {
+            @Override
+            public void onMapLoadSuccess() {
+                mLocationLayer = new LocationLayer(mapView);
+                mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
+                mapView.addLayer(mLocationLayer);
+                mapView.refresh();
+            }
+
+            @Override
+            public void onMapLoadFail() {
+
+            }
+        });
         mProgressDialog.setMessage("请移动方位以完成初始化操作");
     }
 
@@ -346,7 +337,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
             mPendingAsyncResult.setCallback(new IAResultCallback<IAFloorPlan>() {
                 @Override
                 public void onResult(IAResult<IAFloorPlan> result) {
-                    Log.e(TAG, "fetch floor plan result:" + result);
+                    Logger.e("fetch floor plan result:" + result);
                     if (result.isSuccess() && result.getResult() != null) {
                         mFloorPlan = result.getResult();
                         String fileName = mFloorPlan.getId() + ".jpg";
@@ -374,7 +365,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
                     } else {
                         // do something with error
                         if (!asyncResult.isCancelled()) {
-                            Toast.makeText(ImageViewActivity.this,
+                            Toast.makeText(getApplicationContext(),
                                     (result.getError() != null
                                             ? "error loading floor plan: " + result.getError()
                                             : "access to floor plan denied"),
@@ -391,6 +382,4 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
             mPendingAsyncResult.cancel();
         }
     }
-
 }
-

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/text_img"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="show some parameters"/>
+
+    <com.onlylemi.mapview.library.MapView
+        android:id="@+id/map_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <Button
+        android:id="@+id/btn_save_point"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/btn_get_points"
+        android:text="save points data"/>
+    <Button
+        android:id="@+id/btn_get_points"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="show points data"
+        android:layout_alignParentBottom="true"/>
+    <Button
+        android:id="@+id/btn_change_display_mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="切换为地图跟随"
+        android:layout_alignParentRight="true"/>
+</RelativeLayout>

@@ -58,7 +58,8 @@ public class MainActivity extends AppCompatActivity {
         mTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, ImageViewActivity.class));
+//                startActivity(new Intent(MainActivity.this, ImageViewActivity.class));
+                startActivity(new Intent(MainActivity.this, MapViewActivity.class));
             }
         });
 
