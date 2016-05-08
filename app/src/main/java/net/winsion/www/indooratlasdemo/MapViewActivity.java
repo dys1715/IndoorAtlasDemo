@@ -260,8 +260,10 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                 mLocationLayer.setCompassIndicatorArrowRotateDegree(mapDegree + degree);
             }
             if (mapMode == MAP_FOLLOW) {
+                //指针不动
+                mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
                 //设置图片旋转
-                mapView.setCurrentRotateDegrees(degree);
+                mapView.setCurrentRotateDegrees(degree + mapDegree);
             }
             mapView.refresh();
         }
