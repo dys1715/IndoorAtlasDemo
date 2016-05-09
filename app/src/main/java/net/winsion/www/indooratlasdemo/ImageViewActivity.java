@@ -60,7 +60,6 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
     private static final int MAP_FOLLOW = 2; //地图跟随
     // blue dot radius in meters
     private static final float dotRadius = 0.3f;
-
     private IALocationManager mIALocationManager;
     private IAResourceManager mFloorPlanManager;
     private IATask<IAFloorPlan> mPendingAsyncResult;
@@ -74,6 +73,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
     private List<Point> mPointXYList = new ArrayList<>();
     private Button savePoints, showPoints, changeMode;
     private int mapMode;
+    float mapDegree; // the rotate between reality map to northern
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
         @SuppressLint("SetTextI18n")
@@ -85,14 +85,13 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
                 PointF point = mFloorPlan.coordinateToPoint(latLng);
                 mPointXYList.add(new Point(point.x, point.y, location.getLatitude(), location.getLongitude()));
 
-                mTextView.setText("latitude纬度:" + location.getLatitude() + '\n'
+                mTextView.setText("FloorName:" + mFloorPlan.getName() + '\n'
+                        + "latitude纬度:" + location.getLatitude() + '\n'
                         + "longitude经度:" + location.getLongitude() + '\n'
-                        + "Accuracy精度:" + location.getAccuracy() + '\n'
-                        + "Altitude高度:" + location.getAltitude() + '\n'
-                        + "FloorLevel:" + location.getFloorLevel() + '\n'
-                        + "Bearing方位:" + location.getBearing() + '\n'
-                        + "Region:" + location.getRegion().toString()
-                        + "pointX:" + point.x + "|pointY:" + point.y + '\n'
+                        + "Accuracy精度:" + location.getAccuracy() + '\t'
+                        + "| Bearing方位:" + location.getBearing() + '\n'
+                        + "Region:" + location.getRegion().toString() + "\n"
+                        + "pointX:" + point.x + " | pointY:" + point.y + '\n'
                         + "bitmapWidth&Height:" + mFloorPlan.getBitmapWidth() + "*" + mFloorPlan.getBitmapHeight());
 
                 if (mImageView != null && mImageView.isReady()) {
@@ -148,16 +147,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         setContentView(R.layout.activity_image_view);
         // prevent the screen going to sleep while app is on foreground
         findViewById(android.R.id.content).setKeepScreenOn(true);
-
-        mImageView = (BlueDotView) findViewById(R.id.imageView);
-        mTextView = (TextView) findViewById(R.id.text_img);
-        savePoints = (Button) findViewById(R.id.btn_save_point);
-        showPoints = (Button) findViewById(R.id.btn_get_points);
-        changeMode = (Button) findViewById(R.id.btn_change_display_mode);
-
-
-        //默认地图固定
-        mapMode = MAP_FIXED;
+        initView();
 
         savePoints.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -199,28 +189,30 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
             }
         });
 
-        mProgressDialog = new ProgressDialog(ImageViewActivity.this);
-        mProgressDialog.show();
-        mProgressDialog.setMessage("初始化地图数据...");
-
         mDownloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         mIALocationManager = IALocationManager.create(this);
         mFloorPlanManager = IAResourceManager.create(this);
-
-        //配置属性参数（然而并没有用，都是云端决定的。。。）
-        (new IALocation.Builder())
-                .withAccuracy(0.1f)
-                .withAltitude(1000)
-                .build();
-
         //获取传感器服务
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        
         /* optional setup of floor plan id
            if setLocation is not called, then location manager tries to find
            location automatically */
-        setLocation(getString(R.string.indooratlas_floor_plan_id));
+        setLocation(getIntent().getStringExtra("floorPlanId"));
+    }
 
+    private void initView() {
+        mImageView = (BlueDotView) findViewById(R.id.imageView);
+        mTextView = (TextView) findViewById(R.id.text_img);
+        savePoints = (Button) findViewById(R.id.btn_save_point);
+        showPoints = (Button) findViewById(R.id.btn_get_points);
+        changeMode = (Button) findViewById(R.id.btn_change_display_mode);
+        changeMode.setVisibility(View.INVISIBLE);
+        //默认地图固定
+        mapMode = MAP_FIXED;
+        mProgressDialog = new ProgressDialog(ImageViewActivity.this);
+        mProgressDialog.setMessage("初始化地图数据...");
+        mProgressDialog.setCanceledOnTouchOutside(false);
+        mProgressDialog.show();
     }
 
     /**
@@ -238,7 +230,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (mImageView != null && mImageView.isReady()) {
-            float mapDegree = 85; // the rotate between reality map to northern
+            mapDegree = 85; // the rotate between reality map to northern
             float degree = 0;
             if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
                 degree = event.values[0];
@@ -289,12 +281,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         mIALocationManager.destroy();
     }
 
-    /**
-     * Methods for fetching floor plan data and bitmap image.
-     * Method {@link #fetchFloorPlan(String id)} fetches floor plan data including URL to bitmap
-     */
-
-     /*  Broadcast receiver for floor plan image download */
+    /*  Broadcast receiver for floor plan image download */
     private BroadcastReceiver onComplete = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -324,6 +311,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
 
     /**
      * 加载地图
+     *
      * @param filePath
      */
     private void showFloorPlanImage(String filePath) {

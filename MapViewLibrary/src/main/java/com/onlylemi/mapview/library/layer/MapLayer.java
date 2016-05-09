@@ -13,6 +13,8 @@ import android.view.ViewTreeObserver;
 import com.onlylemi.mapview.library.MapView;
 import com.onlylemi.mapview.library.R;
 
+import java.util.logging.Logger;
+
 /**
  * MapLayer
  *
@@ -54,9 +56,8 @@ public class MapLayer extends MapBaseLayer {
      * init map image layer
      */
     private void initMapLayer() {
-        float zoom = getInitZoom(mapView.getWidth(), mapView.getHeight(), image.getWidth(), image
-                .getHeight());
-        Log.i(TAG, zoom + "");
+        float zoom = getInitZoom(mapView.getWidth(), mapView.getHeight(), image.getWidth(), image.getHeight());
+        Log.i(TAG, "zoom:" + zoom );
         mapView.setCurrentZoom(zoom, 0, 0);
 
         float width = mapView.getWidth() - zoom * image.getWidth();
@@ -96,12 +97,13 @@ public class MapLayer extends MapBaseLayer {
     }
 
     @Override
-    public void draw(Canvas canvas, Matrix currentMatrix, float currentZoom, float
-            currentRotateDegrees) {
+    public void draw(Canvas canvas, Matrix currentMatrix, float currentZoom, float currentRotateDegrees) {
         canvas.save();
         canvas.setMatrix(currentMatrix);
         if (image != null) {
             canvas.drawPicture(image);
+        }else {
+            Log.e(TAG,"image is null,load map fail");
         }
         canvas.restore();
     }

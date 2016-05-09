@@ -9,15 +9,49 @@
                 android:paddingTop="@dimen/activity_vertical_margin"
                 tools:context="net.winsion.www.indooratlasdemo.MainActivity">
 
-    <!--<net.winsion.www.indooratlasdemo.imageview.BlueDotView-->
-    <!--android:id="@+id/bd_view"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent" />-->
     <TextView
         android:id="@+id/text1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/ia_blue_tint"
         android:padding="10dp"
-        android:text="Click here\n "
-        android:background="@color/ia_blue_tint"/>
+        android:text="winsion26F"/>
+
+    <TextView
+        android:id="@+id/text2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/text1"
+        android:layout_marginTop="4dp"
+        android:background="@color/ia_blue_tint"
+        android:padding="10dp"
+        android:text="winsion27F"/>
+
+    <EditText
+        android:id="@+id/et_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/text2"
+        android:layout_marginTop="4dp"
+        android:hint="请输入floorPlanId后点击确认"/>
+
+    <Button
+        android:id="@+id/confirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_input"
+        android:text="确认"/>
+    <Button
+        android:id="@+id/btn_imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="使用ImageView"
+        android:layout_below="@+id/confirm"/>
+    <Button
+        android:id="@+id/btn_MapView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="使用MapView"
+        android:layout_toRightOf="@+id/btn_imageView"
+        android:layout_below="@+id/confirm"/>
 </RelativeLayout>

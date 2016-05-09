@@ -87,14 +87,13 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                 PointF point = mFloorPlan.coordinateToPoint(latLng);
                 mPointXYList.add(new Point(point.x, point.y, location.getLatitude(), location.getLongitude()));
 
-                mTextView.setText("latitude纬度:" + location.getLatitude() + '\n'
+                mTextView.setText("FloorName:" + mFloorPlan.getName() + '\n'
+                        + "latitude纬度:" + location.getLatitude() + '\n'
                         + "longitude经度:" + location.getLongitude() + '\n'
-                        + "Accuracy精度:" + location.getAccuracy() + '\n'
-                        + "Altitude高度:" + location.getAltitude() + '\n'
-                        + "FloorLevel:" + location.getFloorLevel() + '\n'
-                        + "Bearing方位:" + location.getBearing() + '\n'
+                        + "Accuracy精度:" + location.getAccuracy() + '\t'
+                        + "| Bearing方位:" + location.getBearing() + '\n'
                         + "Region:" + location.getRegion().toString()
-                        + "pointX:" + point.x + "|pointY:" + point.y + '\n'
+                        + "pointX:" + point.x + " | pointY:" + point.y + '\n'
                         + "bitmapWidth&Height:" + mFloorPlan.getBitmapWidth() + "*" + mFloorPlan.getBitmapHeight());
 
                 if (mLocationLayer != null) {
@@ -153,7 +152,8 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         mFloorPlanManager = IAResourceManager.create(this);
         //获取传感器服务
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        setFloorPlanId(getString(R.string.indooratlas_floor_plan_id));
+
+        setFloorPlanId(getIntent().getStringExtra("floorPlanId"));
     }
 
     @Override
@@ -174,6 +174,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         mIALocationManager.unregisterRegionListener(mRegionListener);
         mSensorManager.unregisterListener(this);
         unregisterReceiver(onComplete);
+        mapView = null;
         Toast.makeText(getApplicationContext(), "定位中止", Toast.LENGTH_SHORT).show();
     }
 
@@ -185,6 +186,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
 
     /**
      * 设置floorPlanId
+     *
      * @param floorPlanId 楼层id
      */
     private void setFloorPlanId(String floorPlanId) {
@@ -208,6 +210,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         mapMode = MAP_FIXED;
         mProgressDialog = new ProgressDialog(MapViewActivity.this);
         mProgressDialog.setMessage("初始化地图数据...");
+        mProgressDialog.setCanceledOnTouchOutside(false);
         mProgressDialog.show();
     }
 
@@ -237,6 +240,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                     changeMode.setText("切换为地图固定");
                 } else {
                     mapMode = MAP_FIXED;
+                    mapView.setCurrentRotateDegrees(0);
                     changeMode.setText("切换为地图跟随");
                 }
                 break;
@@ -263,7 +267,8 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                 //指针不动
                 mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
                 //设置图片旋转
-                mapView.setCurrentRotateDegrees(degree + mapDegree);
+                mapView.setCurrentRotateDegrees(getTargetDircetion(degree) - mapDegree);
+
             }
             mapView.refresh();
         }
@@ -275,9 +280,18 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     /**
+     * 修正方向传感器旋转角度
+     *
+     * @param degree
+     * @return
+     */
+    private float getTargetDircetion(float degree) {
+        return (degree * -1.0f + 720) % 360;
+    }
+
+    /**
      * Broadcast receiver for floor plan image download
      */
-
     private BroadcastReceiver onComplete = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -306,14 +320,17 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
 
     /**
      * 加载地图
+     *
      * @param filePath
      */
+    int sum;
     private void showFloorPlanImage(String filePath) {
         Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
         mapView.loadMap(BitmapFactory.decodeFile(filePath));
         mapView.setMapViewListener(new MapViewListener() {
             @Override
             public void onMapLoadSuccess() {
+                Logger.w(">>>>" + sum++);
                 mLocationLayer = new LocationLayer(mapView);
                 mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
                 mapView.addLayer(mLocationLayer);
@@ -322,7 +339,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
 
             @Override
             public void onMapLoadFail() {
-
+                Logger.e(">>>>>>>>>onMapLoadFail>>>>>");
             }
         });
         mProgressDialog.setMessage("请移动方位以完成初始化操作");
@@ -339,7 +356,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
             mPendingAsyncResult.setCallback(new IAResultCallback<IAFloorPlan>() {
                 @Override
                 public void onResult(IAResult<IAFloorPlan> result) {
-                    Logger.e("fetch floor plan result:" + result);
+                    Logger.i("fetch floor plan result:" + result);
                     if (result.isSuccess() && result.getResult() != null) {
                         mFloorPlan = result.getResult();
                         String fileName = mFloorPlan.getId() + ".jpg";

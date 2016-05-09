@@ -4,12 +4,18 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
+import android.view.MotionEvent;
 
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
+import com.onlylemi.mapview.library.MapView;
+import com.onlylemi.mapview.library.utils.MapMath;
 
 import net.winsion.www.indooratlasdemo.R;
 
@@ -27,6 +33,18 @@ public class BlueDotView extends SubsamplingScaleImageView {
     private float defaultLocationCircleRadius;
     private float compassIndicatorGap;
     private boolean drawIndicator = true;
+    private static final int TOUCH_STATE_TWO_POINTED = 4; // two points touch
+    private static final int TOUCH_STATE_NO = 0; // no touch
+    private int currentTouchState = TOUCH_STATE_NO; // no touch; // default touch state
+    private Matrix saveMatrix = new Matrix();
+    private Matrix currentMatrix = new Matrix();
+    private float currentZoom = 1.0f;
+    private float saveZoom = 0f;
+    private float currentRotateDegrees = 0.0f;
+    private float saveRotateDegrees = 0.0f;
+    private PointF startTouch = new PointF();
+    private PointF mid = new PointF();
+    private float oldDist = 0, oldDegree = 0;
 
     public BlueDotView(Context context) {
         this(context, null);
@@ -57,6 +75,7 @@ public class BlueDotView extends SubsamplingScaleImageView {
 
     /**
      * 画定位点&方向指示器&范围指示器
+     *
      * @param canvas
      */
     private void drawDot(Canvas canvas) {
@@ -76,11 +95,10 @@ public class BlueDotView extends SubsamplingScaleImageView {
             if (drawIndicator && compassIndicatorArrowBitmap != null) {
 
                 canvas.save();
-                canvas.rotate(getCompassIndicatorArrowRotateDegree(),
-                        vPoint.x, vPoint.y);
+                canvas.rotate(getCompassIndicatorArrowRotateDegree(), vPoint.x, vPoint.y);
                 canvas.drawBitmap(compassIndicatorArrowBitmap,
                         vPoint.x - compassIndicatorArrowBitmap.getWidth() / 2,
-                        vPoint.y - defaultLocationCircleRadius - compassIndicatorGap,
+                        vPoint.y - scaledRadius - compassIndicatorGap,
                         new Paint());
                 canvas.restore();
             }
@@ -112,7 +130,7 @@ public class BlueDotView extends SubsamplingScaleImageView {
         return this.compassIndicatorArrowRotateDegree;
     }
 
-    public void setRangeIndicatorMeters(float rangeIndicatorMeters){
+    public void setRangeIndicatorMeters(float rangeIndicatorMeters) {
         this.rangeIndicatorMeters = rangeIndicatorMeters;
     }
 }

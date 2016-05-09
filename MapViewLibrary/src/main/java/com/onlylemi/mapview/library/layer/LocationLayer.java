@@ -22,10 +22,10 @@ public class LocationLayer extends MapBaseLayer {
     private boolean openCompass = false;
 
     // compass color
-    private static final int DEFAULT_LOCATION_COLOR = 0xFF3EBFC9;
-    private static final int DEFAULT_LOCATION_SHADOW_COLOR = 0xFF909090;
-    private static final int DEFAULT_INDICATOR_ARC_COLOR = 0xFFFA4A8D;
-    private static final int DEFAULT_INDICATOR_CIRCLE_COLOR = 0xFF00F0FF;
+    private static final int DEFAULT_LOCATION_COLOR = 0xFF3EBFC9; //暗青蓝色
+    private static final int DEFAULT_LOCATION_SHADOW_COLOR = 0xFF909090; //灰色
+    private static final int DEFAULT_INDICATOR_ARC_COLOR = 0xFFFA4A8D; //粉红色
+    private static final int DEFAULT_INDICATOR_CIRCLE_COLOR = 0xFF00F0FF; //亮青蓝色
     private static final float COMPASS_DELTA_ANGLE = 5.0f; //delta angle角度增量
     private float defaultLocationCircleRadius;
 
@@ -44,15 +44,17 @@ public class LocationLayer extends MapBaseLayer {
 
     private BitmapLayer compassBitmapLayer;
 
-    private Paint compassLinePaint;
     private Paint locationPaint;
-    private Paint indicatorCirclePaint;
-    private Paint indicatorArcPaint;
 
     private PointF currentPosition = null;
 
     public LocationLayer(MapView mapView) {
         this(mapView, null);
+    }
+
+    @Override
+    public void onTouch(MotionEvent event) {
+
     }
 
     public LocationLayer(MapView mapView, PointF currentPosition) {
@@ -76,9 +78,8 @@ public class LocationLayer extends MapBaseLayer {
         locationPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         locationPaint.setAntiAlias(true);
         locationPaint.setStyle(Paint.Style.FILL);
-        locationPaint.setColor(DEFAULT_LOCATION_COLOR);
-        locationPaint.setShadowLayer(5, 3, 3, DEFAULT_LOCATION_SHADOW_COLOR);
-
+//        locationPaint.setColor(DEFAULT_LOCATION_COLOR);
+//        locationPaint.setShadowLayer(5, 3, 3, DEFAULT_LOCATION_SHADOW_COLOR);
 
         compassRadius = setValue(38f);
         compassLocationCircleRadius = setValue(0.5f);
@@ -88,30 +89,9 @@ public class LocationLayer extends MapBaseLayer {
         compassIndicatorCircleRadius = setValue(2.6f);
         compassIndicatorGap = setValue(15.0f);
 
-        // default compassLinePaint
-        compassLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        compassLinePaint.setAntiAlias(true);
-        compassLinePaint.setStrokeWidth(compassLineWidth);
-        // default indicatorCirclePaint
-        indicatorCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        indicatorCirclePaint.setAntiAlias(true);
-        indicatorCirclePaint.setStyle(Paint.Style.FILL);
-        indicatorCirclePaint.setShadowLayer(3, 1, 1, DEFAULT_LOCATION_SHADOW_COLOR);
-        indicatorCirclePaint.setColor(DEFAULT_INDICATOR_CIRCLE_COLOR);
-        // default indicatorArcPaint
-        indicatorArcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        indicatorArcPaint.setStyle(Paint.Style.STROKE);
-        indicatorArcPaint.setColor(DEFAULT_INDICATOR_ARC_COLOR);
-        indicatorArcPaint.setStrokeWidth(compassArcWidth);
-
         compassIndicatorArrowBitmap = BitmapFactory.decodeResource(mapView.getResources(),
                 R.mipmap.compass);
         compassBitmapLayer = new BitmapLayer(mapView, compassIndicatorArrowBitmap, null);
-    }
-
-    @Override
-    public void onTouch(MotionEvent event) {
-
     }
 
     @Override
@@ -139,10 +119,9 @@ public class LocationLayer extends MapBaseLayer {
                             goal[1] - defaultLocationCircleRadius - compassIndicatorGap,
                             new Paint());
                     canvas.restore();
-
                 }
             }
-//            canvas.restore();
+            canvas.restore();
         }
     }
 

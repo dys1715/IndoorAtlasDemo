@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-
     <!-- Set your floor plan id here or leave empty for fully automatic selection
          You can get the floor plan id from developer website-->
-    <!-- f24b095c-743c-4f10-832f-0f14d7785bb6 26F
-         23d425b5-0af4-4a9a-bb9c-66b1d7df6b09 27F-->
-    <string name="indooratlas_floor_plan_id">
+    <string name="indooratlas_floor_plan_id_26f">
         f24b095c-743c-4f10-832f-0f14d7785bb6
-</string>
+    </string>
+    <string name="indooratlas_floor_plan_id_27f">
+        23d425b5-0af4-4a9a-bb9c-66b1d7df6b09
+    </string>
+    <string name="indooratlas_floor_plan_id_zztlj">
+        58ca0523-318b-4631-9b7e-ffd692b6e765
+    </string>
 </resources>
