@@ -325,7 +325,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
      */
     int sum;
     private void showFloorPlanImage(String filePath) {
-        Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
+//        Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
         mapView.loadMap(BitmapFactory.decodeFile(filePath));
         mapView.setMapViewListener(new MapViewListener() {
             @Override
