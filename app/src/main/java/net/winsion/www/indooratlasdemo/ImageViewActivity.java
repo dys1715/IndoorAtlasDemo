@@ -206,7 +206,7 @@ public class ImageViewActivity extends FragmentActivity implements SensorEventLi
         savePoints = (Button) findViewById(R.id.btn_save_point);
         showPoints = (Button) findViewById(R.id.btn_get_points);
         changeMode = (Button) findViewById(R.id.btn_change_display_mode);
-        changeMode.setVisibility(View.INVISIBLE);
+//        changeMode.setVisibility(View.INVISIBLE);
         //默认地图固定
         mapMode = MAP_FIXED;
         mProgressDialog = new ProgressDialog(ImageViewActivity.this);

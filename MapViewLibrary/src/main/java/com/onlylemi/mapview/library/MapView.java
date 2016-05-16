@@ -72,6 +72,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
     public MapView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initMapView();
+        holder = this.getHolder();
     }
 
     /**
@@ -104,7 +105,6 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        this.holder = holder;
         refresh();
     }
 
@@ -123,6 +123,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
      */
     public void refresh() {
         if (holder != null) {
+            synchronized (holder) {
                 canvas = holder.lockCanvas();
                 if (canvas != null) {
                     canvas.drawColor(-1); //画个白底
@@ -135,6 +136,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
                     }
                     holder.unlockCanvasAndPost(canvas);
                 }
+            }
         }
     }
 
@@ -391,8 +393,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
         currentMatrix.postRotate(degrees - currentRotateDegrees, x, y);
 
         currentRotateDegrees = degrees % 360;
-        currentRotateDegrees = currentRotateDegrees > 0 ? currentRotateDegrees :
-                currentRotateDegrees + 360;
+        currentRotateDegrees = currentRotateDegrees > 0 ? currentRotateDegrees : currentRotateDegrees + 360;
     }
 
     public float getCurrentZoom() {

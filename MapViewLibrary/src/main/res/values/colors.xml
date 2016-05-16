@@ -5,4 +5,5 @@
     <color name="colorAccent">#FF4081</color>
     <color name="ia_blue">#ff00a5f5</color>
     <color name="ia_blue_tint">#3809c5f1</color>
+    <color name="temp">#FF909090</color>
 </resources>

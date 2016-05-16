@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -70,7 +71,11 @@ public class BlueDotView extends SubsamplingScaleImageView {
         if (!isReady()) {
             return;
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            canvas.saveLayer(0,0,0,0,new Paint());
+        }
         drawDot(canvas);
+        canvas.restore();
     }
 
     /**
@@ -93,7 +98,6 @@ public class BlueDotView extends SubsamplingScaleImageView {
             canvas.drawCircle(vPoint.x, vPoint.y, scaledRadius, paint);
             //画箭头
             if (drawIndicator && compassIndicatorArrowBitmap != null) {
-
                 canvas.save();
                 canvas.rotate(getCompassIndicatorArrowRotateDegree(), vPoint.x, vPoint.y);
                 canvas.drawBitmap(compassIndicatorArrowBitmap,
@@ -102,7 +106,6 @@ public class BlueDotView extends SubsamplingScaleImageView {
                         new Paint());
                 canvas.restore();
             }
-
         }
     }
 
