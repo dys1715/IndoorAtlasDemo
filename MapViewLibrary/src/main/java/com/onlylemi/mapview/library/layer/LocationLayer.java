@@ -37,7 +37,7 @@ public class LocationLayer extends MapBaseLayer {
     private Bitmap compassIndicatorArrowBitmap; //指南针指示箭头
 
 
-    private Paint locationPaint;
+    private Paint dotPaint,rangeIndicatorPaint,compassPaint;
 
     private PointF currentPosition = null;
 
@@ -67,10 +67,16 @@ public class LocationLayer extends MapBaseLayer {
         // setting dufault values
         defaultLocationCircleRadius = setValue(5f);
 
-        // default locationPaint
-        locationPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        locationPaint.setAntiAlias(true);
-        locationPaint.setStyle(Paint.Style.FILL);
+        // default dotPaint
+        dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG); //使位图抗锯齿的标志
+        dotPaint.setAntiAlias(true);
+        dotPaint.setStyle(Paint.Style.FILL);
+        dotPaint.setColor(BLUE_DOT);
+        //rangeIndicatorPaint
+        rangeIndicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG); //使位图抗锯齿的标志
+        rangeIndicatorPaint.setAntiAlias(true);
+        rangeIndicatorPaint.setStyle(Paint.Style.FILL);
+        rangeIndicatorPaint.setColor(RANGE_INDICATOR);
 
         compassIndicatorGap = setValue(15.0f);
 
@@ -87,20 +93,17 @@ public class LocationLayer extends MapBaseLayer {
 
             if (openCompass) {
                 //画定位点
-                locationPaint.setColor(BLUE_DOT);
-                canvas.drawCircle(goal[0], goal[1], defaultLocationCircleRadius, locationPaint);
+                canvas.drawCircle(goal[0], goal[1], defaultLocationCircleRadius, dotPaint);
                 //画范围指示器
-                locationPaint.setColor(RANGE_INDICATOR);
-                canvas.drawCircle(goal[0], goal[1], defaultLocationCircleRadius * rangeIndicatorMeters, locationPaint);
+                canvas.drawCircle(goal[0], goal[1], defaultLocationCircleRadius * rangeIndicatorMeters, rangeIndicatorPaint);
                 //画箭头
                 if (compassIndicatorArrowBitmap != null) {
                     canvas.save();
                     canvas.rotate(this.compassIndicatorArrowRotateDegree, goal[0], goal[1]);
-                    locationPaint.setColor(BLUE_DOT);
                     canvas.drawBitmap(compassIndicatorArrowBitmap,
                             goal[0] - compassIndicatorArrowBitmap.getWidth() / 2,
                             goal[1] - defaultLocationCircleRadius - compassIndicatorGap,
-                            locationPaint);
+                            dotPaint);
                     canvas.restore();
                 }
             }

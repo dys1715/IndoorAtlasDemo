@@ -12,6 +12,7 @@ import android.view.ViewTreeObserver;
 
 import com.onlylemi.mapview.library.MapView;
 import com.onlylemi.mapview.library.R;
+import com.onlylemi.mapview.library.utils.MapUtils;
 
 import java.util.logging.Logger;
 
@@ -24,8 +25,9 @@ public class MapLayer extends MapBaseLayer {
 
     private static final String TAG = "MapLayer";
 
-    private Picture image;
+    private Picture image = null;
     private boolean hasMeasured;
+    private String path;
 
     public MapLayer(MapView mapView) {
         super(mapView);
@@ -35,22 +37,21 @@ public class MapLayer extends MapBaseLayer {
     public void setImage(Picture image) {
         this.image = image;
 
-        if (mapView.getWidth() == 0) {
-            ViewTreeObserver vto = mapView.getViewTreeObserver();
-            vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-                public boolean onPreDraw() {
-                    if (!hasMeasured) {
-                        initMapLayer();
-                        hasMeasured = true;
-                    }
-                    return true;
-                }
-            });
-        } else {
+//        if (mapView.getWidth() == 0) {
+//            ViewTreeObserver vto = mapView.getViewTreeObserver();
+//            vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+//                public boolean onPreDraw() {
+//                    if (!hasMeasured) {
+//                        initMapLayer();
+//                        hasMeasured = true;
+//                    }
+//                    return true;
+//                }
+//            });
+//        } else {
             initMapLayer();
-        }
+//        }
     }
-
 
     /**
      * init map image layer
@@ -102,6 +103,7 @@ public class MapLayer extends MapBaseLayer {
         canvas.setMatrix(currentMatrix);
         if (image != null) {
             canvas.drawPicture(image);
+            
         }else {
             Log.e(TAG,"image is null,load map fail");
         }

@@ -76,16 +76,20 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     private List<Point> mPointXYList = new ArrayList<>();
     private Button savePoints, showPoints, changeMode;
     private int mapMode;
+    private float mapDegree = 85; // the rotate between reality map to northern
+    private float degree = 0;
+    private PointF mPointF;
+    private String imgPath;
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
         @SuppressLint("SetTextI18n")
         @Override
         public void onLocationChanged(IALocation location) {
             if (mFloorPlan != null) {
-                Logger.i(mFloorPlan.toString());
+//                Logger.i(mFloorPlan.toString());
                 IALatLng latLng = new IALatLng(location.getLatitude(), location.getLongitude());
-                PointF point = mFloorPlan.coordinateToPoint(latLng);
-                mPointXYList.add(new Point(point.x, point.y, location.getLatitude(), location.getLongitude()));
+                mPointF = mFloorPlan.coordinateToPoint(latLng);
+//                mPointXYList.add(new Point(point.x, point.y, location.getLatitude(), location.getLongitude()));
 
                 mTextView.setText("FloorName:" + mFloorPlan.getName() + '\n'
                         + "latitude纬度:" + location.getLatitude() + '\n'
@@ -93,11 +97,11 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                         + "Accuracy精度:" + location.getAccuracy() + '\t'
                         + "| Bearing方位:" + location.getBearing() + '\n'
                         + "Region:" + location.getRegion().toString()
-                        + "pointX:" + point.x + " | pointY:" + point.y + '\n'
+                        + "pointX:" + mPointF.x + " | pointY:" + mPointF.y + '\n'
                         + "bitmapWidth&Height:" + mFloorPlan.getBitmapWidth() + "*" + mFloorPlan.getBitmapHeight());
 
                 if (mLocationLayer != null) {
-                    mLocationLayer.setCurrentPosition(point);
+                    mLocationLayer.setCurrentPosition(mPointF);
                     mLocationLayer.setRangeIndicatorMeters(location.getAccuracy());
                     mapView.refresh();
                     if (mProgressDialog.isShowing()) {
@@ -146,6 +150,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_view);
+
         initView();
         mDownloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         mIALocationManager = IALocationManager.create(this);
@@ -174,7 +179,6 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         mIALocationManager.unregisterRegionListener(mRegionListener);
         mSensorManager.unregisterListener(this);
         unregisterReceiver(onComplete);
-        mapView = null;
         Toast.makeText(getApplicationContext(), "定位中止", Toast.LENGTH_SHORT).show();
     }
 
@@ -203,6 +207,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         savePoints = (Button) findViewById(R.id.btn_save_point);
         showPoints = (Button) findViewById(R.id.btn_get_points);
         changeMode = (Button) findViewById(R.id.btn_change_display_mode);
+        mTextView.setOnClickListener(this);
         savePoints.setOnClickListener(this);
         showPoints.setOnClickListener(this);
         changeMode.setOnClickListener(this);
@@ -217,6 +222,9 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.text_img:
+//                mapView.loadMap(BitmapFactory.decodeFile(imgPath));
+                break;
             case R.id.btn_save_point:
                 //把坐标信息保存到根目录points.txt文件
                 boolean isSave = CommonMethord.saveFile(CommonMethord.ListToStr(mPointXYList));
@@ -252,8 +260,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (mapView != null && mLocationLayer != null) {
-            float mapDegree = 85; // the rotate between reality map to northern
-            float degree = 0;
+
             if (event.sensor.getType() == Sensor.TYPE_ORIENTATION) {
                 degree = event.values[0];
             }
@@ -323,31 +330,32 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
      *
      * @param filePath
      */
-    int sum;
     private void showFloorPlanImage(String filePath) {
 //        Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
-        mapView.loadMap(BitmapFactory.decodeFile(filePath));
-        mapView.setMapViewListener(new MapViewListener() {
-            @Override
-            public void onMapLoadSuccess() {
-                Logger.w(">>>>" + sum++);
-                mLocationLayer = new LocationLayer(mapView);
-                mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
-                mapView.addLayer(mLocationLayer);
-                mapView.refresh();
-            }
+        if (mapView.getLayers()!= null && mapView.getLayers().size() < 2) {
+            mapView.loadMap(BitmapFactory.decodeFile(filePath));
+            mapView.setMapViewListener(new MapViewListener() {
+                @Override
+                public void onMapLoadSuccess() {
 
-            @Override
-            public void onMapLoadFail() {
-                Logger.e(">>>>>>>>>onMapLoadFail>>>>>");
-            }
-        });
-        mProgressDialog.setMessage("请移动方位以完成初始化操作");
-    }
+                    mLocationLayer = new LocationLayer(mapView);
+                    mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
+                    mapView.addLayer(mLocationLayer);
+//                    mapView.refresh();
+                }
 
-    /**
-     * Fetches floor plan data from IndoorAtlas server. Some room for cleaning up!!
-     */
+                @Override
+                public void onMapLoadFail() {
+                    Logger.e(">>>>>>>>>onMapLoadFail>>>>>");
+                }
+            });
+        }
+            mProgressDialog.setMessage("请移动方位以完成初始化操作");
+        }
+
+        /**
+         * Fetches floor plan data from IndoorAtlas server. Some room for cleaning up!!
+         */
     private void fetchFloorPlan(String id) {
         cancelPendingNetworkCalls();
         final IATask<IAFloorPlan> asyncResult = mFloorPlanManager.fetchFloorPlanWithId(id);
@@ -362,10 +370,10 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                         String fileName = mFloorPlan.getId() + ".jpg";
                         String filePath = Environment.getExternalStorageDirectory() + "/"
                                 + Environment.DIRECTORY_DOWNLOADS + "/" + fileName;
+                        imgPath = filePath;
                         File file = new File(filePath);
                         if (!file.exists()) {
-                            DownloadManager.Request request =
-                                    new DownloadManager.Request(Uri.parse(mFloorPlan.getUrl()));
+                            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(mFloorPlan.getUrl()));
                             request.setDescription("IndoorAtlas floor plan");
                             request.setTitle("Floor plan");
                             // requires android 3.2 or later to compile

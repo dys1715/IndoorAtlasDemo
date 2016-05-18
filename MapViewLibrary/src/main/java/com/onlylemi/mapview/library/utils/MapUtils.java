@@ -319,8 +319,7 @@ public final class MapUtils {
      */
     public static Picture getPictureFromBitmap(Bitmap bitmap) {
         Picture picture = new Picture();
-        Canvas canvas = picture.beginRecording(bitmap.getWidth(),
-                bitmap.getHeight());
+        Canvas canvas = picture.beginRecording(bitmap.getWidth(), bitmap.getHeight());
         canvas.drawBitmap(
                 bitmap,
                 null,

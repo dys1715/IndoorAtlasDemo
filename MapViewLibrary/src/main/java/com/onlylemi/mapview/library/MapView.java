@@ -72,14 +72,14 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
     public MapView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initMapView();
-        holder = this.getHolder();
     }
 
     /**
      * init mapview
      */
     private void initMapView() {
-        getHolder().addCallback(this);
+        holder = this.getHolder();
+        holder.addCallback(this);
 
         layers = new ArrayList<MapBaseLayer>() {
             @Override
@@ -115,7 +115,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-
+        canvas = null;
     }
 
     /**
@@ -124,6 +124,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
     public void refresh() {
         if (holder != null) {
             synchronized (holder) {
+                //判断Surface是否已经准备好
                 canvas = holder.lockCanvas();
                 if (canvas != null) {
                     canvas.drawColor(-1); //画个白底
@@ -136,7 +137,9 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
                     }
                     holder.unlockCanvasAndPost(canvas);
                 }
+                
             }
+
         }
     }
 
