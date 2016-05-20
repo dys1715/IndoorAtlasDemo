@@ -31,21 +31,8 @@ public class BlueDotView extends SubsamplingScaleImageView {
     private Bitmap compassIndicatorArrowBitmap; //指南针箭头
     private float compassIndicatorArrowRotateDegree; //箭头旋转角度
     private float rangeIndicatorMeters; //范围指示器
-    private float defaultLocationCircleRadius;
     private float compassIndicatorGap;
     private boolean drawIndicator = true;
-    private static final int TOUCH_STATE_TWO_POINTED = 4; // two points touch
-    private static final int TOUCH_STATE_NO = 0; // no touch
-    private int currentTouchState = TOUCH_STATE_NO; // no touch; // default touch state
-    private Matrix saveMatrix = new Matrix();
-    private Matrix currentMatrix = new Matrix();
-    private float currentZoom = 1.0f;
-    private float saveZoom = 0f;
-    private float currentRotateDegrees = 0.0f;
-    private float saveRotateDegrees = 0.0f;
-    private PointF startTouch = new PointF();
-    private PointF mid = new PointF();
-    private float oldDist = 0, oldDegree = 0;
 
     public BlueDotView(Context context) {
         this(context, null);
@@ -60,8 +47,7 @@ public class BlueDotView extends SubsamplingScaleImageView {
         setWillNotDraw(false);
         setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_CENTER);
         compassIndicatorArrowBitmap = BitmapFactory.decodeResource(this.getContext().getResources(), R.mipmap.compass);
-        // setting dufault values
-        defaultLocationCircleRadius = setValue(8f);
+
         compassIndicatorGap = setValue(15.0f);
     }
 
@@ -71,8 +57,9 @@ public class BlueDotView extends SubsamplingScaleImageView {
         if (!isReady()) {
             return;
         }
+        canvas.save();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            canvas.saveLayer(0,0,0,0,new Paint());
+            canvas.saveLayerAlpha(0,0,0,0,0x88);
         }
         drawDot(canvas);
         canvas.restore();

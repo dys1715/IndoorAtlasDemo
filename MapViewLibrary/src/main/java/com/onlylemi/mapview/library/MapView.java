@@ -123,23 +123,19 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
      */
     public void refresh() {
         if (holder != null) {
-            synchronized (holder) {
-                //判断Surface是否已经准备好
-                canvas = holder.lockCanvas();
-                if (canvas != null) {
-                    canvas.drawColor(-1); //画个白底
-                    if (isMapLoadFinish) {
-                        for (MapBaseLayer layer : layers) {
-                            if (layer.isVisible) {
-                                layer.draw(canvas, currentMatrix, currentZoom, currentRotateDegrees);
-                            }
+            //判断Surface是否已经准备好
+            canvas = holder.lockCanvas();
+            if (canvas != null) {
+                canvas.drawColor(-1); //画个白底
+                if (isMapLoadFinish) {
+                    for (MapBaseLayer layer : layers) {
+                        if (layer.isVisible) {
+                            layer.draw(canvas, currentMatrix, currentZoom, currentRotateDegrees);
                         }
                     }
-                    holder.unlockCanvasAndPost(canvas);
                 }
-                
+                holder.unlockCanvasAndPost(canvas);
             }
-
         }
     }
 
@@ -168,6 +164,8 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
                     if (mapViewListener != null) {
                         // load map success, and callback
                         mapViewListener.onMapLoadSuccess();
+                    } else {
+                        Log.e(TAG, "mapViewListener is null");
                     }
                     isMapLoadFinish = true;
                     refresh();

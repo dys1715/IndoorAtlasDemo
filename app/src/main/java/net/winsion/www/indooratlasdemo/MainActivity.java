@@ -25,7 +25,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mClasses.add(ImageViewActivity.class);
         mClasses.add(MapViewActivity.class);
-        mClass = mClasses.get(0); //默认使用ImageViewActivity
+//        mClass = mClasses.get(0); //默认使用ImageViewActivity
+        mClass = mClasses.get(1); //默认使用MapViewActivity
 
         findViewById(R.id.btn_imageView).setOnClickListener(new View.OnClickListener() {
             @Override

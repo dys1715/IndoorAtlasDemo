@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.hardware.Sensor;
@@ -24,6 +25,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -44,6 +46,7 @@ import com.indooratlas.android.sdk.resources.IATask;
 import com.onlylemi.mapview.library.MapView;
 import com.onlylemi.mapview.library.MapViewListener;
 import com.onlylemi.mapview.library.layer.LocationLayer;
+import com.onlylemi.mapview.library.layer.MarkLayer;
 import com.orhanobut.logger.Logger;
 
 import net.winsion.www.indooratlasdemo.bean.Point;
@@ -64,6 +67,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     private static final int MAP_FOLLOW = 2; //地图跟随
     private MapView mapView;
     private LocationLayer mLocationLayer;
+    private MarkLayer mMarkLayer;
     private IALocationManager mIALocationManager;
     private IAResourceManager mFloorPlanManager;
     private IATask<IAFloorPlan> mPendingAsyncResult;
@@ -76,17 +80,17 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     private List<Point> mPointXYList = new ArrayList<>();
     private Button savePoints, showPoints, changeMode;
     private int mapMode;
-    private float mapDegree = 85; // the rotate between reality map to northern
+    private float mapDegree = 80; // the rotate between reality map to northern
     private float degree = 0;
     private PointF mPointF;
     private String imgPath;
+    private boolean beginDirection = false;
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
         @SuppressLint("SetTextI18n")
         @Override
         public void onLocationChanged(IALocation location) {
             if (mFloorPlan != null) {
-//                Logger.i(mFloorPlan.toString());
                 IALatLng latLng = new IALatLng(location.getLatitude(), location.getLongitude());
                 mPointF = mFloorPlan.coordinateToPoint(latLng);
 //                mPointXYList.add(new Point(point.x, point.y, location.getLatitude(), location.getLongitude()));
@@ -100,20 +104,18 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                         + "pointX:" + mPointF.x + " | pointY:" + mPointF.y + '\n'
                         + "bitmapWidth&Height:" + mFloorPlan.getBitmapWidth() + "*" + mFloorPlan.getBitmapHeight());
 
-                if (mLocationLayer != null) {
+                if (mLocationLayer != null && mMarkLayer!= null) {
+                    if (mProgressDialog.isShowing()) {
+                        mProgressDialog.dismiss();
+//                        mHandler.sendEmptyMessage(EMPTY_MSG);
+                    }
                     mLocationLayer.setCurrentPosition(mPointF);
                     mLocationLayer.setRangeIndicatorMeters(location.getAccuracy());
-                    mapView.refresh();
-                    if (mProgressDialog.isShowing()) {
-                        mHandler.sendEmptyMessage(EMPTY_MSG);
+                    if (beginDirection){
+                        mapView.refresh();
                     }
                 }
             }
-        }
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-            super.onStatusChanged(provider, status, extras);
         }
     };
 
@@ -143,6 +145,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             mProgressDialog.dismiss();
+            beginDirection = true;
         }
     };
 
@@ -277,7 +280,9 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                 mapView.setCurrentRotateDegrees(getTargetDircetion(degree) - mapDegree);
 
             }
-            mapView.refresh();
+            if (beginDirection){
+                mapView.refresh();
+            }
         }
     }
 
@@ -297,6 +302,38 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     /**
+     * 加载地图
+     *
+     * @param filePath
+     */
+    private void showFloorPlanImage(final String filePath) {
+//        Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
+        mProgressDialog.setMessage("请移动方位以完成初始化操作");
+//        if (mapView.getLayers() != null && mapView.getLayers().size() < 2) {
+        Bitmap bitmap;
+        bitmap = BitmapFactory.decodeFile(filePath);
+        mapView.loadMap(bitmap);
+        mapView.setMapViewListener(new MapViewListener() {
+            @Override
+            public void onMapLoadSuccess() {
+                mLocationLayer = new LocationLayer(mapView);
+                mMarkLayer = new MarkLayer(mapView, TestData.getMarks(), TestData.getMarksName());
+                mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
+                mapView.addLayer(mLocationLayer);
+                mapView.addLayer(mMarkLayer);
+//                mapView.refresh();
+                Logger.e(">>>>>>>>>onMapLoadSuccess>>>>>");
+            }
+
+            @Override
+            public void onMapLoadFail() {
+                Logger.e(">>>>>>>>>onMapLoadFail>>>>>");
+            }
+        });
+//        }
+    }
+
+    /**
      * Broadcast receiver for floor plan image download
      */
     private BroadcastReceiver onComplete = new BroadcastReceiver() {
@@ -308,7 +345,8 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                 return;
             }
             Logger.w("Image download completed");
-            Bundle extras = intent.getExtras();
+            final Bundle extras = intent.getExtras();
+
             DownloadManager.Query q = new DownloadManager.Query();
             q.setFilterById(extras.getLong(DownloadManager.EXTRA_DOWNLOAD_ID));
             Cursor c = mDownloadManager.query(q);
@@ -326,36 +364,8 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     };
 
     /**
-     * 加载地图
-     *
-     * @param filePath
+     * Fetches floor plan data from IndoorAtlas server. Some room for cleaning up!!
      */
-    private void showFloorPlanImage(String filePath) {
-//        Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
-        if (mapView.getLayers()!= null && mapView.getLayers().size() < 2) {
-            mapView.loadMap(BitmapFactory.decodeFile(filePath));
-            mapView.setMapViewListener(new MapViewListener() {
-                @Override
-                public void onMapLoadSuccess() {
-
-                    mLocationLayer = new LocationLayer(mapView);
-                    mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
-                    mapView.addLayer(mLocationLayer);
-//                    mapView.refresh();
-                }
-
-                @Override
-                public void onMapLoadFail() {
-                    Logger.e(">>>>>>>>>onMapLoadFail>>>>>");
-                }
-            });
-        }
-            mProgressDialog.setMessage("请移动方位以完成初始化操作");
-        }
-
-        /**
-         * Fetches floor plan data from IndoorAtlas server. Some room for cleaning up!!
-         */
     private void fetchFloorPlan(String id) {
         cancelPendingNetworkCalls();
         final IATask<IAFloorPlan> asyncResult = mFloorPlanManager.fetchFloorPlanWithId(id);
@@ -364,7 +374,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
             mPendingAsyncResult.setCallback(new IAResultCallback<IAFloorPlan>() {
                 @Override
                 public void onResult(IAResult<IAFloorPlan> result) {
-                    Logger.i("fetch floor plan result:" + result);
+                    Logger.w("fetch floor plan result:" + result);
                     if (result.isSuccess() && result.getResult() != null) {
                         mFloorPlan = result.getResult();
                         String fileName = mFloorPlan.getId() + ".jpg";
@@ -373,17 +383,16 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                         imgPath = filePath;
                         File file = new File(filePath);
                         if (!file.exists()) {
+                            Logger.w("file not exists,Let's download");
                             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(mFloorPlan.getUrl()));
                             request.setDescription("IndoorAtlas floor plan");
                             request.setTitle("Floor plan");
                             // requires android 3.2 or later to compile
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
                                 request.allowScanningByMediaScanner();
-                                request.setNotificationVisibility(DownloadManager.
-                                        Request.VISIBILITY_HIDDEN);
+                                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
                             }
-                            request.setDestinationInExternalPublicDir(Environment.
-                                    DIRECTORY_DOWNLOADS, fileName);
+                            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
                             mDownloadId = mDownloadManager.enqueue(request);
                         } else {
@@ -400,7 +409,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                         }
                     }
                 }
-            }, Looper.getMainLooper()); // deliver callbacks in main thread
+            }, Looper.getMainLooper()); // deliver callbacks in main thread  Looper.getMainLooper()
         }
     }
 

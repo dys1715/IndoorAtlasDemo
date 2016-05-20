@@ -37,20 +37,20 @@ public class MapLayer extends MapBaseLayer {
     public void setImage(Picture image) {
         this.image = image;
 
-//        if (mapView.getWidth() == 0) {
-//            ViewTreeObserver vto = mapView.getViewTreeObserver();
-//            vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-//                public boolean onPreDraw() {
-//                    if (!hasMeasured) {
-//                        initMapLayer();
-//                        hasMeasured = true;
-//                    }
-//                    return true;
-//                }
-//            });
-//        } else {
+        if (mapView.getWidth() == 0) {
+            ViewTreeObserver vto = mapView.getViewTreeObserver();
+            vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                public boolean onPreDraw() {
+                    if (!hasMeasured) {
+                        initMapLayer();
+                        hasMeasured = true;
+                    }
+                    return true;
+                }
+            });
+        } else {
             initMapLayer();
-//        }
+        }
     }
 
     /**
