@@ -17,14 +17,14 @@ import com.onlylemi.mapview.library.layer.MapBaseLayer;
 import com.onlylemi.mapview.library.layer.MapLayer;
 import com.onlylemi.mapview.library.utils.MapMath;
 import com.onlylemi.mapview.library.utils.MapUtils;
+import com.onlylemi.mapview.library.utils.ThreadHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * MapView
- *
- * @author: onlylemi
  */
 public class MapView extends SurfaceView implements SurfaceHolder.Callback {
 
@@ -60,6 +60,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
 
     private float oldDist = 0, oldDegree = 0;
     private boolean isScaleAndRotateTogether = false;
+    private boolean running;
 
     public MapView(Context context) {
         this(context, null);
@@ -73,6 +74,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
         super(context, attrs, defStyleAttr);
         initMapView();
     }
+
 
     /**
      * init mapview
@@ -115,52 +117,57 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        canvas = null;
+        Log.e(TAG,"surfaceDestroyed>>>>>>>>>>>");
+//        running = false;
     }
 
     /**
      * reload mapview
      */
     public void refresh() {
-        if (holder != null) {
-            //判断Surface是否已经准备好
-            canvas = holder.lockCanvas();
-            if (canvas != null) {
-                canvas.drawColor(-1); //画个白底
-                if (isMapLoadFinish) {
-                    for (MapBaseLayer layer : layers) {
-                        if (layer.isVisible) {
-                            layer.draw(canvas, currentMatrix, currentZoom, currentRotateDegrees);
+        ThreadHelper.getThreadPool().execute(new Runnable() {
+            @Override
+            public void run() {
+                while (running) {
+                    //判断Surface是否已经准备好
+                    if (holder != null) {
+                        canvas = holder.lockCanvas();
+                        if (canvas != null) {
+                            canvas.drawColor(-1); //画个白底
+                            if (isMapLoadFinish) {
+                                for (MapBaseLayer layer : layers) {
+                                    if (layer.isVisible) {
+                                        layer.draw(canvas, currentMatrix, currentZoom, currentRotateDegrees);
+                                    }
+                                }
+                            }
+                            holder.unlockCanvasAndPost(canvas);
                         }
                     }
                 }
-                holder.unlockCanvasAndPost(canvas);
             }
-        }
-    }
+        });
 
-    public void loadMap(Bitmap bitmap) {
-        loadMap(MapUtils.getPictureFromBitmap(bitmap));
     }
 
     /**
-     * load map image
+     * load map
      *
-     * @param picture
+     * @param bitmap
      */
-    public void loadMap(final Picture picture) {
+    public void loadMap(final Bitmap bitmap) {
+//        loadMap(MapUtils.getPictureFromBitmap(bitmap));
         isMapLoadFinish = false;
-
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if (picture != null) {
+                if (bitmap != null) {
                     if (mapLayer == null) {
                         mapLayer = new MapLayer(MapView.this);
                         // add map image layer
                         layers.add(mapLayer);
                     }
-                    mapLayer.setImage(picture);
+                    mapLayer.setImage(bitmap);
                     if (mapViewListener != null) {
                         // load map success, and callback
                         mapViewListener.onMapLoadSuccess();
@@ -176,8 +183,43 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
         }).start();
+
     }
 
+//    /**
+//     * load map image
+//     *
+//     * @param picture
+//     */
+//    /*public void loadMap(final Picture picture) {
+//        isMapLoadFinish = false;
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                if (picture != null) {
+//                    if (mapLayer == null) {
+//                        mapLayer = new MapLayer(MapView.this);
+//                        // add map image layer
+//                        layers.add(mapLayer);
+//                    }
+//                    mapLayer.setImage(picture);
+//                    if (mapViewListener != null) {
+//                        // load map success, and callback
+//                        mapViewListener.onMapLoadSuccess();
+//                    } else {
+//                        Log.e(TAG, "mapViewListener is null");
+//                    }
+//                    isMapLoadFinish = true;
+//                    refresh();
+//                } else {
+//                    if (mapViewListener != null) {
+//                        mapViewListener.onMapLoadFail();
+//                    }
+//                }
+//            }
+//        }).start();
+//
+//    }*/
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (!isMapLoadFinish) {
@@ -223,8 +265,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
                 switch (currentTouchState) {
                     case MapView.TOUCH_STATE_SCROLL:
                         currentMatrix.set(saveMatrix);
-                        currentMatrix.postTranslate(event.getX() - startTouch.x, event.getY() -
-                                startTouch.y);
+                        currentMatrix.postTranslate(event.getX() - startTouch.x, event.getY() - startTouch.y);
                         refresh();
                         break;
                     case MapView.TOUCH_STATE_TWO_POINTED:
@@ -467,5 +508,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
         return mapLayer.getImage().getHeight();
     }
 
-
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
 }

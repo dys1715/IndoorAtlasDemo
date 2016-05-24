@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.hardware.Sensor;
@@ -20,12 +19,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -93,27 +89,25 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
             if (mFloorPlan != null) {
                 IALatLng latLng = new IALatLng(location.getLatitude(), location.getLongitude());
                 mPointF = mFloorPlan.coordinateToPoint(latLng);
-//                mPointXYList.add(new Point(point.x, point.y, location.getLatitude(), location.getLongitude()));
+//                mPointXYList.add(new Point(mPointF.x, mPointF.y, location.getLatitude(), location.getLongitude()));
+//                mTextView.setText("FloorName:" + mFloorPlan.getName() + '\n'
+//                        + "latitude纬度:" + location.getLatitude() + '\n'
+//                        + "longitude经度:" + location.getLongitude() + '\n'
+//                        + "Accuracy精度:" + location.getAccuracy() + '\t'
+//                        + "| Bearing方位:" + location.getBearing() + '\n'
+//                        + "Region:" + location.getRegion().toString()
+//                        + "pointX:" + mPointF.x + " | pointY:" + mPointF.y + '\n'
+//                        + "bitmapWidth&Height:" + mFloorPlan.getBitmapWidth() + "*" + mFloorPlan.getBitmapHeight());
 
-                mTextView.setText("FloorName:" + mFloorPlan.getName() + '\n'
-                        + "latitude纬度:" + location.getLatitude() + '\n'
-                        + "longitude经度:" + location.getLongitude() + '\n'
-                        + "Accuracy精度:" + location.getAccuracy() + '\t'
-                        + "| Bearing方位:" + location.getBearing() + '\n'
-                        + "Region:" + location.getRegion().toString()
-                        + "pointX:" + mPointF.x + " | pointY:" + mPointF.y + '\n'
-                        + "bitmapWidth&Height:" + mFloorPlan.getBitmapWidth() + "*" + mFloorPlan.getBitmapHeight());
-
-                if (mLocationLayer != null && mMarkLayer!= null) {
+                if (mLocationLayer != null && mMarkLayer != null) {
                     if (mProgressDialog.isShowing()) {
                         mProgressDialog.dismiss();
-//                        mHandler.sendEmptyMessage(EMPTY_MSG);
+                        beginDirection = true;
                     }
                     mLocationLayer.setCurrentPosition(mPointF);
                     mLocationLayer.setRangeIndicatorMeters(location.getAccuracy());
-                    if (beginDirection){
-                        mapView.refresh();
-                    }
+                    mapView.refresh();
+
                 }
             }
         }
@@ -123,9 +117,8 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
 
         @Override
         public void onEnterRegion(IARegion region) {
-            Logger.i(region.toString());
             //获取配置的floorId
-            if (region.getType() == IARegion.TYPE_FLOOR_PLAN) {
+            if (region.getType() == IARegion.TYPE_FLOOR_PLAN && !mapView.isMapLoadFinish()) {
                 String id = region.getId();
                 Toast.makeText(getApplicationContext(), id, Toast.LENGTH_SHORT).show();
                 fetchFloorPlan(id);
@@ -140,27 +133,16 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
 
     };
 
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            mProgressDialog.dismiss();
-            beginDirection = true;
-        }
-    };
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_view);
-
         initView();
         mDownloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         mIALocationManager = IALocationManager.create(this);
         mFloorPlanManager = IAResourceManager.create(this);
         //获取传感器服务
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-
         setFloorPlanId(getIntent().getStringExtra("floorPlanId"));
     }
 
@@ -173,11 +155,13 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         //注册方向传感器
         mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_NORMAL);
         registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        mapView.setRunning(true);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        mapView.setRunning(false);
         mIALocationManager.removeLocationUpdates(mLocationListener);
         mIALocationManager.unregisterRegionListener(mRegionListener);
         mSensorManager.unregisterListener(this);
@@ -188,6 +172,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mProgressDialog.dismiss();
         mIALocationManager.destroy();
     }
 
@@ -210,9 +195,10 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         savePoints = (Button) findViewById(R.id.btn_save_point);
         showPoints = (Button) findViewById(R.id.btn_get_points);
         changeMode = (Button) findViewById(R.id.btn_change_display_mode);
-        mTextView.setOnClickListener(this);
         savePoints.setOnClickListener(this);
         showPoints.setOnClickListener(this);
+        savePoints.setVisibility(View.INVISIBLE);
+        showPoints.setVisibility(View.INVISIBLE);
         changeMode.setOnClickListener(this);
         //默认地图固定
         mapMode = MAP_FIXED;
@@ -225,26 +211,23 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.text_img:
-//                mapView.loadMap(BitmapFactory.decodeFile(imgPath));
-                break;
-            case R.id.btn_save_point:
-                //把坐标信息保存到根目录points.txt文件
-                boolean isSave = CommonMethord.saveFile(CommonMethord.ListToStr(mPointXYList));
-                if (isSave) {
-                    Toast.makeText(getApplicationContext(), "坐标点保存成功", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "坐标点保存失败", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.btn_get_points:
-                String pointsData = CommonMethord.getFile(CommonMethord.getCurrentTime());
-                new AlertDialog.Builder(MapViewActivity.this)
-                        .setTitle("points data")
-                        .setMessage(pointsData)
-                        .create()
-                        .show();
-                break;
+//            case R.id.btn_save_point:
+//                //把坐标信息保存到根目录points.txt文件
+//                boolean isSave = CommonMethord.saveFile(CommonMethord.ListToStr(mPointXYList));
+//                if (isSave) {
+//                    Toast.makeText(getApplicationContext(), "坐标点保存成功", Toast.LENGTH_SHORT).show();
+//                } else {
+//                    Toast.makeText(getApplicationContext(), "坐标点保存失败", Toast.LENGTH_SHORT).show();
+//                }
+//                break;
+//            case R.id.btn_get_points:
+//                String pointsData = CommonMethord.getFile(CommonMethord.getCurrentTime());
+//                new AlertDialog.Builder(MapViewActivity.this)
+//                        .setTitle("points data")
+//                        .setMessage(pointsData)
+//                        .create()
+//                        .show();
+//                break;
             case R.id.btn_change_display_mode:
                 if (mapMode == MAP_FIXED) {
                     mapMode = MAP_FOLLOW;
@@ -280,7 +263,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                 mapView.setCurrentRotateDegrees(getTargetDircetion(degree) - mapDegree);
 
             }
-            if (beginDirection){
+            if (beginDirection) {
                 mapView.refresh();
             }
         }
@@ -309,20 +292,19 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     private void showFloorPlanImage(final String filePath) {
 //        Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
         mProgressDialog.setMessage("请移动方位以完成初始化操作");
-//        if (mapView.getLayers() != null && mapView.getLayers().size() < 2) {
-        Bitmap bitmap;
-        bitmap = BitmapFactory.decodeFile(filePath);
-        mapView.loadMap(bitmap);
+        mapView.loadMap(BitmapFactory.decodeFile(filePath));
         mapView.setMapViewListener(new MapViewListener() {
             @Override
             public void onMapLoadSuccess() {
-                mLocationLayer = new LocationLayer(mapView);
-                mMarkLayer = new MarkLayer(mapView, TestData.getMarks(), TestData.getMarksName());
-                mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
-                mapView.addLayer(mLocationLayer);
-                mapView.addLayer(mMarkLayer);
-//                mapView.refresh();
-                Logger.e(">>>>>>>>>onMapLoadSuccess>>>>>");
+                if (mLocationLayer == null && mMarkLayer == null) {
+                    mLocationLayer = new LocationLayer(mapView);
+                    mMarkLayer = new MarkLayer(mapView, TestData.getMarks(), TestData.getMarksName());
+                    mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
+                    mapView.addLayer(mLocationLayer);
+                    mapView.addLayer(mMarkLayer);
+                    mapView.refresh();
+                    Logger.i(">>>>>>>>>onMapLoadSuccess>>>>>");
+                }
             }
 
             @Override
@@ -330,7 +312,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                 Logger.e(">>>>>>>>>onMapLoadFail>>>>>");
             }
         });
-//        }
+
     }
 
     /**
@@ -417,5 +399,10 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         if (mPendingAsyncResult != null && !mPendingAsyncResult.isCancelled()) {
             mPendingAsyncResult.cancel();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 }
