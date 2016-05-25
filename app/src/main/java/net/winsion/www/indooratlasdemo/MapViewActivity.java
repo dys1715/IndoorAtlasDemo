@@ -22,6 +22,7 @@ import android.os.Environment;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -143,6 +144,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         mFloorPlanManager = IAResourceManager.create(this);
         //获取传感器服务
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        Logger.w(getIntent().getStringExtra("floorPlanId"));
         setFloorPlanId(getIntent().getStringExtra("floorPlanId"));
     }
 
@@ -300,6 +302,12 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                     mLocationLayer = new LocationLayer(mapView);
                     mMarkLayer = new MarkLayer(mapView, TestData.getMarks(), TestData.getMarksName());
                     mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
+                    mMarkLayer.setMarkIsClickListener(new MarkLayer.MarkIsClickListener() {
+                        @Override
+                        public void markIsClick(int num) {
+                            Toast.makeText(getApplicationContext(),num+"",Toast.LENGTH_SHORT).show();
+                        }
+                    });
                     mapView.addLayer(mLocationLayer);
                     mapView.addLayer(mMarkLayer);
                     mapView.refresh();
@@ -312,7 +320,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                 Logger.e(">>>>>>>>>onMapLoadFail>>>>>");
             }
         });
-
+       
     }
 
     /**

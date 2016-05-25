@@ -11,9 +11,9 @@ public class ThreadHelper {
     private static ExecutorService threadPool;
 
     static {
-//        threadPool = Executors.newFixedThreadPool(10);
+        threadPool = Executors.newFixedThreadPool(5);
 //        threadPool = Executors.newCachedThreadPool();
-        threadPool = Executors.newSingleThreadExecutor();
+//        threadPool = Executors.newSingleThreadExecutor();
     }
 
     public static ExecutorService getThreadPool() {

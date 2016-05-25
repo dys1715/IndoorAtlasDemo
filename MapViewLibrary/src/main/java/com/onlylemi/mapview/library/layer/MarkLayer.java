@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.onlylemi.mapview.library.MapView;
@@ -63,9 +64,11 @@ public class MarkLayer extends MapBaseLayer {
             if (marks.size() != 0) {
                 float[] goal = mapView.convertMapXYToScreenXY(event.getX(), event.getY());
                 for (int i = 0; i < marks.size(); i++) {
-                    if (MapMath.getDistanceBetweenTwoPoints(goal[0], goal[1],
-                            marks.get(i).x - bmpMark.getWidth() / 2, marks.get(i).y - bmpMark
-                                    .getHeight() / 2) <= 50) {
+                    if (MapMath.getDistanceBetweenTwoPoints(
+                            goal[0],
+                            goal[1],
+                            marks.get(i).x - bmpMark.getWidth() / 2,
+                            marks.get(i).y - bmpMark.getHeight() / 2) <= 50) {
                         num = i;
                         isClickMark = true;
                         break;
@@ -73,6 +76,7 @@ public class MarkLayer extends MapBaseLayer {
 
                     if (i == marks.size() - 1) {
                         isClickMark = false;
+                        listener.markIsClick(-1); //点击了空白区域返回-1标志
                     }
                 }
 
