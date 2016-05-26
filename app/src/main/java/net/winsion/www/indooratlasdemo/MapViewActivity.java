@@ -1,7 +1,6 @@
 package net.winsion.www.indooratlasdemo;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -9,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.hardware.Sensor;
@@ -47,7 +47,6 @@ import com.onlylemi.mapview.library.layer.MarkLayer;
 import com.orhanobut.logger.Logger;
 
 import net.winsion.www.indooratlasdemo.bean.Point;
-import net.winsion.www.indooratlasdemo.utils.CommonMethord;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -80,8 +79,8 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     private float mapDegree = 80; // the rotate between reality map to northern
     private float degree = 0;
     private PointF mPointF;
-    private String imgPath;
     private boolean beginDirection = false;
+    private Bitmap mFloorMap = null; //当前楼层地图
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
         @SuppressLint("SetTextI18n")
@@ -111,6 +110,26 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
 
                 }
             }
+        }
+
+        /**
+         * 返回校准状态值
+         * @param provider
+         * @param status
+         * @param extras
+         *  CALIBRATION_POOR = 0;
+         *  CALIBRATION_GOOD = 1;
+         *  CALIBRATION_EXCELLENT = 2;.
+         *  STATUS_OUT_OF_SERVICE = 0;
+         *  STATUS_TEMPORARILY_UNAVAILABLE = 1;
+         *  STATUS_AVAILABLE = 2;
+         *  STATUS_LIMITED = 10;
+         *  STATUS_CALIBRATION_CHANGED = 11;
+         */
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            super.onStatusChanged(provider, status, extras);
+            Logger.w(status + "");
         }
     };
 
@@ -176,6 +195,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         super.onDestroy();
         mProgressDialog.dismiss();
         mIALocationManager.destroy();
+        mFloorMap = null;
     }
 
     /**
@@ -291,10 +311,11 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
      *
      * @param filePath
      */
-    private void showFloorPlanImage(final String filePath) {
+    private void showFloorPlanImage(String filePath) {
 //        Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
         mProgressDialog.setMessage("请移动方位以完成初始化操作");
-        mapView.loadMap(BitmapFactory.decodeFile(filePath));
+        mFloorMap = BitmapFactory.decodeFile(filePath);
+        mapView.loadMap(mFloorMap);
         mapView.setMapViewListener(new MapViewListener() {
             @Override
             public void onMapLoadSuccess() {
@@ -370,7 +391,6 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                         String fileName = mFloorPlan.getId() + ".jpg";
                         String filePath = Environment.getExternalStorageDirectory() + "/"
                                 + Environment.DIRECTORY_DOWNLOADS + "/" + fileName;
-                        imgPath = filePath;
                         File file = new File(filePath);
                         if (!file.exists()) {
                             Logger.w("file not exists,Let's download");
