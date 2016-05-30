@@ -46,6 +46,7 @@
         </activity>
         <activity android:name=".ImageViewActivity"/>
         <activity android:name=".MapViewActivity"/>
+        <activity android:name=".SensorListActivity"/>
     </application>
 
 </manifest>

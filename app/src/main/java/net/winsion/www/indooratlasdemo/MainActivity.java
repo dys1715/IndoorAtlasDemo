@@ -32,14 +32,20 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mClass = mClasses.get(0); //ImageViewActivity
-                Toast.makeText(getApplicationContext(),"已切换为ImageView",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "已切换为ImageView", Toast.LENGTH_SHORT).show();
             }
         });
         findViewById(R.id.btn_MapView).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mClass = mClasses.get(1); //MapViewActivity
-                Toast.makeText(getApplicationContext(),"已切换为MapView",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "已切换为MapView", Toast.LENGTH_SHORT).show();
+            }
+        });
+        findViewById(R.id.btn_get_sensor_list).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, SensorListActivity.class));
             }
         });
 

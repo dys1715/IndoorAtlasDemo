@@ -23,6 +23,7 @@ import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -78,7 +79,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     private int mapMode;
     private float mapDegree = 80; // the rotate between reality map to northern
     private float degree = 0;
-    private PointF mPointF;
+    private PointF mPointF, centerPoint;
     private boolean beginDirection = false;
     private Bitmap mFloorMap = null; //当前楼层地图
 
@@ -104,7 +105,9 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                         mProgressDialog.dismiss();
                         beginDirection = true;
                     }
-                    mLocationLayer.setCurrentPosition(mPointF);
+                    if (mapMode == MAP_FIXED) {
+                        mLocationLayer.setCurrentPosition(mPointF);
+                    }
                     mLocationLayer.setRangeIndicatorMeters(location.getAccuracy());
                     mapView.refresh();
 
@@ -119,7 +122,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
          * @param extras
          *  CALIBRATION_POOR = 0;
          *  CALIBRATION_GOOD = 1;
-         *  CALIBRATION_EXCELLENT = 2;.
+         *  CALIBRATION_EXCELLENT = 2;
          *  STATUS_OUT_OF_SERVICE = 0;
          *  STATUS_TEMPORARILY_UNAVAILABLE = 1;
          *  STATUS_AVAILABLE = 2;
@@ -252,8 +255,13 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
 //                break;
             case R.id.btn_change_display_mode:
                 if (mapMode == MAP_FIXED) {
+                    Toast toast = Toast.makeText(this,"功能调试中",Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
+                    toast.show();
                     mapMode = MAP_FOLLOW;
                     changeMode.setText("切换为地图固定");
+                    //点居于整体中心
+                    mLocationLayer.setCurrentPosition(centerPoint);
                 } else {
                     mapMode = MAP_FIXED;
                     mapView.setCurrentRotateDegrees(0);
@@ -281,6 +289,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
             if (mapMode == MAP_FOLLOW) {
                 //指针不动
                 mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
+
                 //设置图片旋转
                 mapView.setCurrentRotateDegrees(getTargetDircetion(degree) - mapDegree);
 
@@ -316,6 +325,8 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         mProgressDialog.setMessage("请移动方位以完成初始化操作");
         mFloorMap = BitmapFactory.decodeFile(filePath);
         mapView.loadMap(mFloorMap);
+        centerPoint = new PointF((float) mFloorMap.getWidth() / 2, (float) mFloorMap.getHeight() / 2);
+        mapView.setScaleAndRotateTogether(true);
         mapView.setMapViewListener(new MapViewListener() {
             @Override
             public void onMapLoadSuccess() {
@@ -326,7 +337,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                     mMarkLayer.setMarkIsClickListener(new MarkLayer.MarkIsClickListener() {
                         @Override
                         public void markIsClick(int num) {
-                            Toast.makeText(getApplicationContext(),num+"",Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(getApplicationContext(),num+"",Toast.LENGTH_SHORT).show();
                         }
                     });
                     mapView.addLayer(mLocationLayer);
@@ -341,7 +352,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                 Logger.e(">>>>>>>>>onMapLoadFail>>>>>");
             }
         });
-       
+
     }
 
     /**

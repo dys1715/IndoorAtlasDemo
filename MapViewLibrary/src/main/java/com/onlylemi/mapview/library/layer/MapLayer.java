@@ -13,15 +13,15 @@ import com.onlylemi.mapview.library.MapView;
 
 /**
  * MapLayer
- *
  */
 public class MapLayer extends MapBaseLayer {
 
     private static final String TAG = "MapLayer";
 
-    private Picture image = null;
+    //    private Picture image = null;
     private Bitmap mBitmap = null;
     private boolean hasMeasured;
+    private Paint mPaint;
 
     public MapLayer(MapView mapView) {
         super(mapView);
@@ -70,9 +70,10 @@ public class MapLayer extends MapBaseLayer {
      * init map image layer
      */
     private void initMapLayer() {
+        mPaint = new Paint();
 //        float zoom = getInitZoom(mapView.getWidth(), mapView.getHeight(), image.getWidth(), image.getHeight());
         float zoom = getInitZoom(mapView.getWidth(), mapView.getHeight(), mBitmap.getWidth(), mBitmap.getHeight());
-        Log.i(TAG, "zoom:" + zoom );
+        Log.i(TAG, "zoom:" + zoom);
         mapView.setCurrentZoom(zoom, 0, 0);
 
 //        float width = mapView.getWidth() - zoom * image.getWidth();
@@ -116,10 +117,10 @@ public class MapLayer extends MapBaseLayer {
     public void draw(Canvas canvas, Matrix currentMatrix, float currentZoom, float currentRotateDegrees) {
         canvas.save();
         canvas.setMatrix(currentMatrix);
-        if (mBitmap != null){
-            canvas.drawBitmap(mBitmap,0,0,new Paint());
-        }else {
-            Log.e(TAG,"mBitmap is null,load map fail");
+        if (mBitmap != null) {
+            canvas.drawBitmap(mBitmap, 0, 0, null);
+        } else {
+            Log.e(TAG, "mBitmap is null,load map fail");
         }
 //        if (image != null) {
 //            canvas.drawPicture(image);
@@ -133,7 +134,7 @@ public class MapLayer extends MapBaseLayer {
 //        return image;
 //    }
 
-    public Bitmap getImage(){
+    public Bitmap getImage() {
         return mBitmap;
     }
 }

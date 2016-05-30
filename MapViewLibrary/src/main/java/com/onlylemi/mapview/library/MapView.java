@@ -39,7 +39,7 @@ public class MapView extends SurfaceView implements SurfaceHolder.Callback {
     private Canvas canvas;
 
     private float minZoom = 0.5f;
-    private float maxZoom = 3.0f;
+    private float maxZoom = 4.0f;
 
     private PointF startTouch = new PointF();
     private PointF mid = new PointF();
