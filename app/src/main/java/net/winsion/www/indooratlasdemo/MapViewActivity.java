@@ -5,6 +5,7 @@ import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -20,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -48,6 +50,7 @@ import com.onlylemi.mapview.library.layer.MarkLayer;
 import com.orhanobut.logger.Logger;
 
 import net.winsion.www.indooratlasdemo.bean.Point;
+import net.winsion.www.indooratlasdemo.utils.CommonMethord;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -82,6 +85,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     private PointF mPointF, centerPoint;
     private boolean beginDirection = false;
     private Bitmap mFloorMap = null; //当前楼层地图
+    private boolean useIndoor = false;
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
         @SuppressLint("SetTextI18n")
@@ -161,6 +165,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_view);
         initView();
+        checkOutMagSensor();
         mDownloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         mIALocationManager = IALocationManager.create(this);
         mFloorPlanManager = IAResourceManager.create(this);
@@ -168,6 +173,39 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         Logger.w(getIntent().getStringExtra("floorPlanId"));
         setFloorPlanId(getIntent().getStringExtra("floorPlanId"));
+    }
+
+
+    private void checkOutMagSensor() {
+        // 获取全部传感器列表
+        List<Sensor> sensors = CommonMethord.getSensorLists(this);
+        for (Sensor item : sensors) {
+            if (2 == item.getType()) {
+                if (item.getVendor().toLowerCase().contains("Yamaha".toLowerCase())) {
+                    mProgressDialog.dismiss();
+                    new AlertDialog.Builder(this)
+                            .setCancelable(false)
+                            .setMessage("系统检测到您当前手机传感器对室内定位效果支持较弱，是否继续使用？")
+                            .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    useIndoor = true;
+                                    mProgressDialog.show();
+                                }
+                            })
+                            .setNegativeButton("退出", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+                                }
+                            })
+                            .create()
+                            .show();
+                } else {
+                    useIndoor = true;
+                }
+            }
+        }
     }
 
     @Override
@@ -255,8 +293,8 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
 //                break;
             case R.id.btn_change_display_mode:
                 if (mapMode == MAP_FIXED) {
-                    Toast toast = Toast.makeText(this,"功能调试中",Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
+                    Toast toast = Toast.makeText(this, "功能调试中", Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                     toast.show();
                     mapMode = MAP_FOLLOW;
                     changeMode.setText("切换为地图固定");

@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
 
+import net.winsion.www.indooratlasdemo.utils.CommonMethord;
+
 import java.util.List;
 
 /**
@@ -27,11 +29,8 @@ public class SensorListActivity extends Activity {
     }
 
     private void getSensorList() {
-        // 获取传感器管理器
-        SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-
         // 获取全部传感器列表
-        List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
+        List<Sensor> sensors = CommonMethord.getSensorLists(this);
 
         // 打印每个传感器信息
         StringBuilder strLog = new StringBuilder();

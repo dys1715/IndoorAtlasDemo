@@ -1,5 +1,8 @@
 package net.winsion.www.indooratlasdemo.utils;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Environment;
 
 import net.winsion.www.indooratlasdemo.bean.Point;
@@ -87,5 +90,13 @@ public class CommonMethord {
 
     public static String getCurrentTime() {
         return new SimpleDateFormat("yyyyMMddHH").format(new Date());
+    }
+
+    public static List<Sensor> getSensorLists(Context mContext){
+        // 获取传感器管理器
+        SensorManager sensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
+
+        // 获取全部传感器列表
+        return sensorManager.getSensorList(Sensor.TYPE_ALL);
     }
 }
