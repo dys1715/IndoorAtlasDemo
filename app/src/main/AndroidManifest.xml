@@ -1,34 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="net.winsion.www.indooratlasdemo">
+          xmlns:tools="http://schemas.android.com/tools"
+          package="net.winsion.www.indooratlasdemo">
 
-    <uses-feature android:name="android.hardware.sensor.accelerometer"
-        android:required="true" />
-    <uses-feature android:name="android.hardware.sensor.compass"
-        android:required="true" />
-    <uses-feature android:name="android.hardware.sensor.gyroscope"
-        android:required="true" />
-    <uses-feature android:name="android.hardware.wifi"
-        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.sensor.accelerometer"
+        android:required="true"/>
+    <uses-feature
+        android:name="android.hardware.sensor.compass"
+        android:required="true"/>
+    <uses-feature
+        android:name="android.hardware.sensor.gyroscope"
+        android:required="true"/>
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="true"/>
     <!-- 向SDCard写入数据权限 -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <!-- SDCard中创建与删除文件权限 -->
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
-    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.READ_LOGS" />
+    <uses-permission android:name="android.permission.READ_LOGS"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <uses-permission-sdk-23 android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
-        android:fullBackupContent="true"
         android:allowBackup="true"
+        android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="GoogleAppIndexingWarning">
+
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:name=".ImageViewActivity"/>
+        <activity android:name=".MapViewActivity"/>
+        <activity android:name=".SensorListActivity"/>
 
         <meta-data
             android:name="com.indooratlas.android.sdk.API_KEY"
@@ -36,17 +56,6 @@
         <meta-data
             android:name="com.indooratlas.android.sdk.API_SECRET"
             android:value="pqsK0XIvocUa6Dxg%WrWhznN4GTFisxTjSxElN8g67jyD%29K1K6Cn1CsSv6EY6vtvSnOSGdWFchRSIAVnOgEhV7!HK8vbyjZdPZrGbIgr8yYAa9vWadJezA1Pt(zSNb"/>
-
-        <activity android:name=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity android:name=".ImageViewActivity"/>
-        <activity android:name=".MapViewActivity"/>
-        <activity android:name=".SensorListActivity"/>
     </application>
 
 </manifest>

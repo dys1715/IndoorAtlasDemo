@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:keepScreenOn="true"
+                android:orientation="vertical"
+                tools:ignore="HardcodedText,RtlHardcoded">
 
     <com.onlylemi.mapview.library.MapView
         android:id="@+id/map_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
     <TextView
         android:id="@+id/text_img"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        tools:ignore="RelativeOverlap"/>
 
     <Button
         android:id="@+id/btn_save_point"
@@ -28,10 +33,11 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:text="show points data"/>
+
     <Button
         android:id="@+id/btn_change_display_mode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="切换为地图跟随"
-        android:layout_alignParentRight="true"/>
+        android:layout_alignParentRight="true"
+        android:text="切换为地图跟随"/>
 </RelativeLayout>

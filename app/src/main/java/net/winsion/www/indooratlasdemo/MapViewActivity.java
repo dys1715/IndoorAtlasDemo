@@ -121,8 +121,8 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
 
         /**
          * 返回校准状态值
-         * @param provider
-         * @param status
+         * @param provider provider
+         * @param status status
          * @param extras
          *  CALIBRATION_POOR = 0;
          *  CALIBRATION_GOOD = 1;
@@ -181,6 +181,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         List<Sensor> sensors = CommonMethord.getSensorLists(this);
         for (Sensor item : sensors) {
             if (2 == item.getType()) {
+                //如果是yamaha的地磁计，就给提示
                 if (item.getVendor().toLowerCase().contains("Yamaha".toLowerCase())) {
                     mProgressDialog.dismiss();
                     new AlertDialog.Builder(this)
@@ -346,8 +347,8 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     /**
      * 修正方向传感器旋转角度
      *
-     * @param degree
-     * @return
+     * @param degree 角度
+     * @return 修正角
      */
     private float getTargetDircetion(float degree) {
         return (degree * -1.0f + 720) % 360;
@@ -356,7 +357,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     /**
      * 加载地图
      *
-     * @param filePath
+     * @param filePath 文件路径
      */
     private void showFloorPlanImage(String filePath) {
 //        Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
