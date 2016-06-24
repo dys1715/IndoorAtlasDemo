@@ -1,5 +1,6 @@
 package net.winsion.www.indooratlasdemo;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.app.ProgressDialog;
@@ -21,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -31,6 +33,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.anthonycr.grant.PermissionsManager;
+import com.anthonycr.grant.PermissionsResultAction;
 import com.indooratlas.android.sdk.IALocation;
 import com.indooratlas.android.sdk.IALocationListener;
 import com.indooratlas.android.sdk.IALocationManager;
@@ -47,6 +51,8 @@ import com.onlylemi.mapview.library.MapView;
 import com.onlylemi.mapview.library.MapViewListener;
 import com.onlylemi.mapview.library.layer.LocationLayer;
 import com.onlylemi.mapview.library.layer.MarkLayer;
+import com.onlylemi.mapview.library.layer.RouteLayer;
+import com.onlylemi.mapview.library.utils.MapUtils;
 import com.orhanobut.logger.Logger;
 
 import net.winsion.www.indooratlasdemo.bean.Point;
@@ -55,6 +61,7 @@ import net.winsion.www.indooratlasdemo.utils.CommonMethord;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by dys on 2016/5/8 0008.
@@ -62,12 +69,13 @@ import java.util.List;
  */
 public class MapViewActivity extends AppCompatActivity implements View.OnClickListener, SensorEventListener {
 
-    private static final int EMPTY_MSG = 10000;
+    private static final String TAG = "MapViewActivity";
     private static final int MAP_FIXED = 1; //地图固定
     private static final int MAP_FOLLOW = 2; //地图跟随
     private MapView mapView;
     private LocationLayer mLocationLayer;
     private MarkLayer mMarkLayer;
+    private RouteLayer mRouteLayer;
     private IALocationManager mIALocationManager;
     private IAResourceManager mFloorPlanManager;
     private IATask<IAFloorPlan> mPendingAsyncResult;
@@ -86,6 +94,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     private boolean beginDirection = false;
     private Bitmap mFloorMap = null; //当前楼层地图
     private boolean useIndoor = false;
+    String filePath;
 
     private IALocationListener mLocationListener = new IALocationListenerSupport() {
         @SuppressLint("SetTextI18n")
@@ -136,7 +145,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
             super.onStatusChanged(provider, status, extras);
-            Logger.w(status + "");
+//            Logger.w(status + "");
         }
     };
 
@@ -165,16 +174,14 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_view);
         initView();
-        checkOutMagSensor();
         mDownloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         mIALocationManager = IALocationManager.create(this);
         mFloorPlanManager = IAResourceManager.create(this);
         //获取传感器服务
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        Logger.w(getIntent().getStringExtra("floorPlanId"));
         setFloorPlanId(getIntent().getStringExtra("floorPlanId"));
-    }
 
+    }
 
     private void checkOutMagSensor() {
         // 获取全部传感器列表
@@ -183,7 +190,6 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
             if (2 == item.getType()) {
                 //如果是yamaha的地磁计，就给提示
                 if (item.getVendor().toLowerCase().contains("Yamaha".toLowerCase())) {
-                    mProgressDialog.dismiss();
                     new AlertDialog.Builder(this)
                             .setCancelable(false)
                             .setMessage("系统检测到您当前手机传感器对室内定位效果支持较弱，是否继续使用？")
@@ -204,6 +210,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                             .show();
                 } else {
                     useIndoor = true;
+                    mProgressDialog.show();
                 }
             }
         }
@@ -212,8 +219,10 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     protected void onResume() {
         super.onResume();
+        Log.w(TAG, "==============onResume===================");
         // starts receiving location updates
         mIALocationManager.requestLocationUpdates(IALocationRequest.create(), mLocationListener);
+        //注册区域监听，加载地图
         mIALocationManager.registerRegionListener(mRegionListener);
         //注册方向传感器
         mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION), SensorManager.SENSOR_DELAY_NORMAL);
@@ -224,20 +233,23 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     protected void onPause() {
         super.onPause();
+        Log.w(TAG, "==============onPause===================");
         mapView.setRunning(false);
         mIALocationManager.removeLocationUpdates(mLocationListener);
         mIALocationManager.unregisterRegionListener(mRegionListener);
         mSensorManager.unregisterListener(this);
         unregisterReceiver(onComplete);
-        Toast.makeText(getApplicationContext(), "定位中止", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(getApplicationContext(), "定位中止", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         mProgressDialog.dismiss();
         mIALocationManager.destroy();
         mFloorMap = null;
+
     }
 
     /**
@@ -247,7 +259,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
      */
     private void setFloorPlanId(String floorPlanId) {
         if (!TextUtils.isEmpty(floorPlanId)) {
-            final IALocation location = IALocation.from(IARegion.floorPlan(floorPlanId));
+            IALocation location = IALocation.from(IARegion.floorPlan(floorPlanId));
             mIALocationManager.setLocation(location);
         }
     }
@@ -264,6 +276,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
         savePoints.setVisibility(View.INVISIBLE);
         showPoints.setVisibility(View.INVISIBLE);
         changeMode.setOnClickListener(this);
+        changeMode.setVisibility(View.INVISIBLE);
         //默认地图固定
         mapMode = MAP_FIXED;
         mProgressDialog = new ProgressDialog(MapViewActivity.this);
@@ -359,28 +372,49 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
      *
      * @param filePath 文件路径
      */
+    private List<PointF> nodes;
+    private List<PointF> nodesContract;
+    private List<PointF> marks;
+    private List<String> marksName;
     private void showFloorPlanImage(String filePath) {
 //        Logger.w("showFloorPlanImage: " + filePath + "; MetersToPixels=" + mFloorPlan.getMetersToPixels());
         mProgressDialog.setMessage("请移动方位以完成初始化操作");
         mFloorMap = BitmapFactory.decodeFile(filePath);
+
+        nodes = TestData.getNodesList();
+        nodesContract = TestData.getNodesContactList();
+        marks = TestData.getMarks();
+        marksName = TestData.getMarksName();
+        MapUtils.init(nodes.size(), nodesContract.size());
+
         mapView.loadMap(mFloorMap);
         centerPoint = new PointF((float) mFloorMap.getWidth() / 2, (float) mFloorMap.getHeight() / 2);
         mapView.setScaleAndRotateTogether(true);
         mapView.setMapViewListener(new MapViewListener() {
             @Override
             public void onMapLoadSuccess() {
-                if (mLocationLayer == null && mMarkLayer == null) {
+                if (mLocationLayer == null && mMarkLayer == null && mRouteLayer == null) {
                     mLocationLayer = new LocationLayer(mapView);
-                    mMarkLayer = new MarkLayer(mapView, TestData.getMarks(), TestData.getMarksName());
-                    mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
+                    mMarkLayer = new MarkLayer(mapView, marks, marksName);
+                    mRouteLayer = new RouteLayer(mapView);
+//                    mLocationLayer.setCompassIndicatorArrowRotateDegree(0);
                     mMarkLayer.setMarkIsClickListener(new MarkLayer.MarkIsClickListener() {
                         @Override
                         public void markIsClick(int num) {
 //                            Toast.makeText(getApplicationContext(),num+"",Toast.LENGTH_SHORT).show();
+                            if (num != -1){
+                                PointF target = new PointF(marks.get(num).x, marks.get(num).y);
+                                List<Integer> routeList = MapUtils.getShortestDistanceBetweenTwoPoints
+                                        (marks.get(0), target, nodes, nodesContract);
+                                mRouteLayer.setNodeList(nodes);
+                                mRouteLayer.setRouteList(routeList);
+                                mapView.refresh();
+                            }
                         }
                     });
                     mapView.addLayer(mLocationLayer);
                     mapView.addLayer(mMarkLayer);
+                    mapView.addLayer(mRouteLayer);
                     mapView.refresh();
                     Logger.i(">>>>>>>>>onMapLoadSuccess>>>>>");
                 }
@@ -439,7 +473,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
                     if (result.isSuccess() && result.getResult() != null) {
                         mFloorPlan = result.getResult();
                         String fileName = mFloorPlan.getId() + ".jpg";
-                        String filePath = Environment.getExternalStorageDirectory() + "/"
+                        filePath = Environment.getExternalStorageDirectory() + "/"
                                 + Environment.DIRECTORY_DOWNLOADS + "/" + fileName;
                         File file = new File(filePath);
                         if (!file.exists()) {

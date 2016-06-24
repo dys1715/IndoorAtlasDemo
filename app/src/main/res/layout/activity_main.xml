@@ -11,7 +11,7 @@
 
     <TextView
         android:id="@+id/text1"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@color/ia_blue_tint"
         android:padding="10dp"
@@ -19,19 +19,29 @@
 
     <TextView
         android:id="@+id/text2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/ia_blue_tint"
+        android:padding="10dp"
+        android:text="winsion27F"
+        android:layout_marginLeft="4dp"
+        android:layout_toRightOf="@+id/text1"/>
+
+    <TextView
+        android:id="@+id/text3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/text1"
+        android:layout_below="@+id/text2"
         android:layout_marginTop="4dp"
         android:background="@color/ia_blue_tint"
         android:padding="10dp"
-        android:text="winsion27F"/>
+        android:text="西站2层"/>
 
     <EditText
         android:id="@+id/et_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/text2"
+        android:layout_below="@+id/text3"
         android:layout_marginTop="4dp"
         android:hint="请输入floorPlanId后点击确认"/>
 
@@ -46,12 +56,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="使用ImageView"
+        android:visibility="gone"
         android:layout_below="@+id/confirm"/>
     <Button
         android:id="@+id/btn_MapView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="使用MapView"
+        android:visibility="gone"
         android:layout_toRightOf="@+id/btn_imageView"
         android:layout_below="@+id/confirm"/>
     <Button

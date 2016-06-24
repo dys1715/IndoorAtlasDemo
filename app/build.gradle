@@ -28,10 +28,11 @@ repositories{
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
+    compile project(':MapViewLibrary')
     compile 'com.android.support:appcompat-v7:23.3.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.davemorrissey.labs:subsampling-scale-image-view:3.2.0'
     compile 'com.orhanobut:logger:1.11'
     compile 'com.indooratlas.android:indooratlas-android-sdk:2.1.2@aar'
-    compile project(':MapViewLibrary')
+    compile 'com.anthonycr.grant:permissions:1.0'
 }
