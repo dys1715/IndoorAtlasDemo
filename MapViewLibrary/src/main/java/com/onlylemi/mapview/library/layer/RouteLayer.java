@@ -76,10 +76,8 @@ public class RouteLayer extends MapBaseLayer {
                     // end node
                     PointF end = nodeList.get(routeList.get(i + 1));
 
-                    float goal1[] = {nodeList.get(routeList.get(i)).x,
-                            nodeList.get(routeList.get(i)).y};
-                    float goal2[] = {nodeList.get(routeList.get(i + 1)).x,
-                            nodeList.get(routeList.get(i + 1)).y};
+                    float goal1[] = {start.x, start.y};
+                    float goal2[] = {end.x, end.y};
                     currentMatrix.mapPoints(goal1);
                     currentMatrix.mapPoints(goal2);
                     paint.setStrokeWidth(routeWidth);

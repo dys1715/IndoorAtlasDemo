@@ -250,6 +250,39 @@ public final class MapUtils {
     }
 
     /**
+     * add point to list
+     *
+     * @param point
+     * @param nodes
+     * @param nodesContact
+     */
+    private static void addPointToList(PointF point, List<PointF> nodes, List<PointF> nodesContact) {
+        if (point != null) {
+            PointF pV = null;
+            int po1 = 0, po2 = 0;
+            float min1 = INF;
+            for (int i = 0; i < nodesContact.size() - 1; i++) {
+                PointF p1 = nodes.get((int) nodesContact.get(i).x);
+                PointF p2 = nodes.get((int) nodesContact.get(i).y);
+                if (!MapMath.isObtuseAnglePointAndLine(point, p1, p2)) {
+                    float minDis = MapMath.getDistanceFromPointToLine(point, p1, p2);
+                    if (min1 > minDis) {
+                        pV = MapMath.getIntersectionCoordinatesFromPointToLine(point, p1, p2);
+                        min1 = minDis;
+                        po1 = (int) nodesContact.get(i).x;
+                        po2 = (int) nodesContact.get(i).y;
+                    }
+                }
+            }
+            // get intersection
+            nodes.add(pV);
+            //Log.i(TAG, "node=" + (nodes.size() - 1) + ", po1=" + po1 + ", po2=" + po2);
+            nodesContact.add(new PointF(po1, nodes.size() - 1));
+            nodesContact.add(new PointF(po2, nodes.size() - 1));
+        }
+    }
+
+    /**
      * get the shortest path from the position point to the target point in the map
      *
      * @param position
@@ -275,40 +308,6 @@ public final class MapUtils {
         addPointToList(position, nodes, nodesContact);
 
         return getShortestPathBetweenTwoPoints(nodes.size() - 1, target, nodes, nodesContact);
-    }
-
-    /**
-     * add point to list
-     *
-     * @param point
-     * @param nodes
-     * @param nodesContact
-     */
-    private static void addPointToList(PointF point, List<PointF> nodes, List<PointF>
-            nodesContact) {
-        if (point != null) {
-            PointF pV = null;
-            int po1 = 0, po2 = 0;
-            float min1 = INF;
-            for (int i = 0; i < nodesContact.size() - 1; i++) {
-                PointF p1 = nodes.get((int) nodesContact.get(i).x);
-                PointF p2 = nodes.get((int) nodesContact.get(i).y);
-                if (!MapMath.isObtuseAnglePointAndLine(point, p1, p2)) {
-                    float minDis = MapMath.getDistanceFromPointToLine(point, p1, p2);
-                    if (min1 > minDis) {
-                        pV = MapMath.getIntersectionCoordinatesFromPointToLine(point, p1, p2);
-                        min1 = minDis;
-                        po1 = (int) nodesContact.get(i).x;
-                        po2 = (int) nodesContact.get(i).y;
-                    }
-                }
-            }
-            // get intersection
-            nodes.add(pV);
-            //Log.i(TAG, "node=" + (nodes.size() - 1) + ", po1=" + po1 + ", po2=" + po2);
-            nodesContact.add(new PointF(po1, nodes.size() - 1));
-            nodesContact.add(new PointF(po2, nodes.size() - 1));
-        }
     }
 
     /**

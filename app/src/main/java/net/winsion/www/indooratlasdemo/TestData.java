@@ -80,13 +80,21 @@ public class TestData {
     public static List<PointF> getMarks() {
         List<PointF> marks = new ArrayList<>();
         marks.add(new PointF(637, 153));
-        marks.add(new PointF(736, 113));
-        marks.add(new PointF(776, 200));
-        marks.add(new PointF(776, 240));
+        marks.add(new PointF(726, 113));
+        marks.add(new PointF(770, 200));
+        marks.add(new PointF(770, 240));
+        marks.add(new PointF(775, 273));
         marks.add(new PointF(990, 187));
         marks.add(new PointF(990, 276));
-        marks.add(new PointF(736, 90));
+        marks.add(new PointF(770, 90));
         marks.add(new PointF(915, 90));
+        marks.add(new PointF(915, 50));
+        marks.add(new PointF(835, 200));
+        marks.add(new PointF(835, 240));
+        marks.add(new PointF(835, 275));
+        marks.add(new PointF(830, 120));
+        marks.add(new PointF(830, 80));
+        marks.add(new PointF(840, 50));
         return marks;
     }
 
@@ -95,14 +103,22 @@ public class TestData {
 //        for (int i = 0; i < getMarks().size(); i++) {
 //            marksName.add("Shop " + (i + 1));
 //        }
-        marksName.add("enter");
+        marksName.add("Enter");
         marksName.add("饮水机");
-        marksName.add("张昌明");
-        marksName.add("邓宇思");
+        marksName.add("小明");
+        marksName.add("=_=");
+        marksName.add("志银");
         marksName.add("周聪");
         marksName.add("李霈");
-        marksName.add("杨金樑");
-        marksName.add("刘浩亮");
+        marksName.add("金樑");
+        marksName.add("浩亮");
+        marksName.add("是谁呢");
+        marksName.add("昕昕");
+        marksName.add("王蒙");
+        marksName.add("武军");
+        marksName.add("no body");
+        marksName.add("金龙");
+        marksName.add("no body+1");
 
         return marksName;
     }

@@ -404,6 +404,7 @@ public class MapViewActivity extends AppCompatActivity implements View.OnClickLi
 //                            Toast.makeText(getApplicationContext(),num+"",Toast.LENGTH_SHORT).show();
                             if (num != -1){
                                 PointF target = new PointF(marks.get(num).x, marks.get(num).y);
+                                Toast.makeText(MapViewActivity.this,target.x+","+target.y,Toast.LENGTH_LONG).show();
                                 List<Integer> routeList = MapUtils.getShortestDistanceBetweenTwoPoints
                                         (marks.get(0), target, nodes, nodesContract);
                                 mRouteLayer.setNodeList(nodes);
